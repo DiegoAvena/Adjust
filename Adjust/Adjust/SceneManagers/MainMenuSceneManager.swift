@@ -11,6 +11,8 @@ class MainMenuSceneManager: SKScene {
     
     private var newGameButton: SKSpriteNode?
     
+    var doingButtonFunction = false
+    
     //TODO:
     private var currentHighScore: Int?
     private var lastScore: Int?
@@ -32,7 +34,7 @@ class MainMenuSceneManager: SKScene {
         
         //the game title
         let gameTitle = SKLabelNode(fontNamed: "Our-Arcade-Games")
-        gameTitle.fontSize = 140
+        gameTitle.fontSize = 60 //was 140
         gameTitle.fontColor = UIColor(cgColor: textColor)
         gameTitle.position = CGPoint(x: self.frame.size.width / 2, y: self.frame.size.height - (self.frame.size.height / 4.5))
         gameTitle.text = "ADJUST!"
@@ -44,17 +46,17 @@ class MainMenuSceneManager: SKScene {
         
         //high score label:
         let highScoreLabel = SKLabelNode(fontNamed: "Our-Arcade-Games")
-        highScoreLabel.fontSize = 65
+        highScoreLabel.fontSize = 25 //was 65
         highScoreLabel.fontColor = UIColor(cgColor: textColor)
         highScoreLabel.position = CGPoint(x: self.frame.size.width / 2, y: (self.frame.size.height / 2) + (self.frame.size.height / 8.85))
         highScoreLabel.text = "HIGH SCORE: 0"
         self.addChild(highScoreLabel)
                 
-        let UISpacing: CGFloat = 150
+        let UISpacing: CGFloat = 80 //was 150
         
         //score label:
         let lastScoreLabel = SKLabelNode(fontNamed: "Our-Arcade-Games")
-        lastScoreLabel.fontSize = 65
+        lastScoreLabel.fontSize = 25 //was 65
         lastScoreLabel.fontColor = UIColor(cgColor: textColor)
         lastScoreLabel.position = CGPoint(x: self.frame.size.width / 2, y: highScoreLabel.position.y - UISpacing)
         lastScoreLabel.text = "LAST SCORE: 0"
@@ -63,7 +65,7 @@ class MainMenuSceneManager: SKScene {
         //new game button:
         newGameButton = SKSpriteNode(imageNamed: "newGameBtn")
         newGameButton!.name = "newGameButton"
-        newGameButton!.scale(to: CGSize(width: newGameButton!.size.width * 2, height: newGameButton!.size.height * 2))
+        newGameButton!.scale(to: CGSize(width: newGameButton!.size.width * 0.95, height: newGameButton!.size.height * 0.95))
         newGameButton!.position = CGPoint(x: self.frame.size.width / 2, y: lastScoreLabel.position.y - (newGameButton!.size.height / 2) - UISpacing)
         newGameButton!.zPosition = 10
         self.addChild(newGameButton!)
@@ -106,18 +108,14 @@ class MainMenuSceneManager: SKScene {
         
     }
     
-    private func createButtonClickEffect(startingScales: CGSize) -> [SKAction] {
-        
-        let scaleFactor: CGFloat = 1.15
-        var buttonClickAction = [SKAction]()
-        buttonClickAction.append(SKAction.scale(to: CGSize(width: startingScales.width * scaleFactor, height: startingScales.height * scaleFactor), duration: 0.2))
-        buttonClickAction.append(SKAction.scale(to: startingScales, duration: 0.2))
-        return buttonClickAction
-        
-    }
-    
     //for pressing the start game button:
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        
+        if (doingButtonFunction) {
+            
+            return
+            
+        }
         
         let touch = touches.first
         
@@ -127,13 +125,18 @@ class MainMenuSceneManager: SKScene {
             
             if nodesArray.first?.name == "newGameButton" {
                 
+                doingButtonFunction = true
                 self.run(SKAction.playSoundFileNamed("buttonClick.wav", waitForCompletion: false))
                 //transition to the game scene:
-                nodesArray.first?.run(SKAction.sequence(createButtonClickEffect(startingScales: newGameButton!.size)), completion: {
+                nodesArray.first?.run(SKAction.sequence(SharedButtonFunctions.createButtonClickEffect(startingScales: newGameButton!.size)), completion: {
                     
                     let transition = SKTransition.flipVertical(withDuration: 0.5)
-                    let gameScene = GameScene(size: self.size)
-                    self.view?.presentScene(gameScene, transition: transition)
+                    if let gameScene = GameScene(fileNamed: "GameScene") {
+                        
+                        self.view?.presentScene(gameScene, transition: transition)
+
+                        
+                    }
                     
                 })
                 

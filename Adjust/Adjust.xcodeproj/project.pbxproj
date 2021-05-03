@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AA55B665263FA53000AE16C0 /* SharedButtonFunctions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA55B664263FA52F00AE16C0 /* SharedButtonFunctions.swift */; };
+		AA55B66E263FDD2800AE16C0 /* PlatformManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA55B66D263FDD2800AE16C0 /* PlatformManager.swift */; };
 		AA7D8C3B263506BA00D24CE2 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA7D8C3A263506BA00D24CE2 /* AppDelegate.swift */; };
 		AA7D8C3D263506BA00D24CE2 /* GameScene.sks in Resources */ = {isa = PBXBuildFile; fileRef = AA7D8C3C263506BA00D24CE2 /* GameScene.sks */; };
 		AA7D8C3F263506BA00D24CE2 /* Actions.sks in Resources */ = {isa = PBXBuildFile; fileRef = AA7D8C3E263506BA00D24CE2 /* Actions.sks */; };
@@ -29,6 +31,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		AA55B664263FA52F00AE16C0 /* SharedButtonFunctions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedButtonFunctions.swift; sourceTree = "<group>"; };
+		AA55B66D263FDD2800AE16C0 /* PlatformManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlatformManager.swift; sourceTree = "<group>"; };
 		AA7D8C37263506BA00D24CE2 /* Adjust.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Adjust.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA7D8C3A263506BA00D24CE2 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		AA7D8C3C263506BA00D24CE2 /* GameScene.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = GameScene.sks; sourceTree = "<group>"; };
@@ -92,6 +96,8 @@
 				AA7D8C44263506BA00D24CE2 /* Main.storyboard */,
 				AA7D8C47263506BB00D24CE2 /* Assets.xcassets */,
 				AA7D8C49263506BB00D24CE2 /* Info.plist */,
+				AA55B664263FA52F00AE16C0 /* SharedButtonFunctions.swift */,
+				AA55B66D263FDD2800AE16C0 /* PlatformManager.swift */,
 			);
 			path = Adjust;
 			sourceTree = "<group>";
@@ -222,7 +228,9 @@
 			files = (
 				AA7D8C6F26350F5800D24CE2 /* MainMenuSceneManager.swift in Sources */,
 				AA7D8C41263506BA00D24CE2 /* GameScene.swift in Sources */,
+				AA55B665263FA53000AE16C0 /* SharedButtonFunctions.swift in Sources */,
 				AA7D8C43263506BA00D24CE2 /* GameViewController.swift in Sources */,
+				AA55B66E263FDD2800AE16C0 /* PlatformManager.swift in Sources */,
 				AA7D8C3B263506BA00D24CE2 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -363,12 +371,14 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = NDVQ9E772J;
 				INFOPLIST_FILE = Adjust/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.Adjust;
+				PRODUCT_BUNDLE_IDENTIFIER = com.AdjustGame;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -381,12 +391,14 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = NDVQ9E772J;
 				INFOPLIST_FILE = Adjust/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.Adjust;
+				PRODUCT_BUNDLE_IDENTIFIER = com.AdjustGame;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
