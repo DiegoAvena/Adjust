@@ -9,8 +9,7 @@ import SpriteKit
 
 class PlatformManager {
     
-    //var platformSlitSpacing: CGFloat
-    //let additionalSlitSpacing: CGFloat = 10
+    private var platformID: String
     
     private var currentPlatformGroup: [SKSpriteNode]!
     private var initialYPositionsOfCurrentPlatformGroup: [CGFloat]!
@@ -24,8 +23,25 @@ class PlatformManager {
     private var xCordAtWhichCubeIsPassed: CGFloat
     
     public var passedCubeAlready: Bool = false
+    public var offTheScreenAlready: Bool = false
     
-    init(scene: SKScene, platformMovementTime: CGFloat, platformSlitSpacing: CGFloat, xCordAtWhichCubeIsPassed: CGFloat) {
+    let colliderSizeDownScaleFactor: CGFloat = 1.115
+    
+    private func setUpPhysicsOnPlatform(colliderSize: CGSize) -> SKPhysicsBody {
+        
+        let boxCollider = SKPhysicsBody(rectangleOf: CGSize(width: colliderSize.width / colliderSizeDownScaleFactor, height: colliderSize.height / colliderSizeDownScaleFactor))
+        boxCollider.categoryBitMask = PhysicsCategories.platforms
+        boxCollider.contactTestBitMask = PhysicsCategories.mainCube
+        boxCollider.collisionBitMask = PhysicsCategories.none
+        boxCollider.isDynamic = true
+        
+        return boxCollider
+        
+    }
+    
+    init(scene: SKScene, platformMovementTime: CGFloat, platformSlitSpacing: CGFloat, xCordAtWhichCubeIsPassed: CGFloat, platformID: String) {
+        
+        self.platformID = platformID
         
         self.platformMovementTime = platformMovementTime
         self.xCordAtWhichCubeIsPassed = xCordAtWhichCubeIsPassed
@@ -35,18 +51,21 @@ class PlatformManager {
         topPlatform.position = CGPoint(x: scene.frame.size.width * 1.5, y: scene.frame.size.height + (platformSlitSpacing / 2))
         topPlatform.colorBlendFactor = 1
         topPlatform.color = UIColor(cgColor: CGColor(red: 1, green: 0, blue: 0, alpha: 1))
-        topPlatform.name = "platform"
+        topPlatform.name = platformID
+        topPlatform.physicsBody = setUpPhysicsOnPlatform(colliderSize: topPlatform.size)
         
         let bottomPlatform = SKSpriteNode(imageNamed: "platform")
         bottomPlatform.scale(to: CGSize(width: topPlatform.size.width, height: scene.frame.size.height))
         bottomPlatform.position = CGPoint(x: scene.frame.size.width * 1.5, y: 0 - (platformSlitSpacing / 2))
         bottomPlatform.colorBlendFactor = 1
         bottomPlatform.color = UIColor(cgColor: CGColor(red: 1, green: 0, blue: 0, alpha: 1))
-        bottomPlatform.name = "platform"
+        bottomPlatform.name = platformID
+        bottomPlatform.physicsBody = setUpPhysicsOnPlatform(colliderSize: bottomPlatform.size)
         
         var platformMovementAction = [SKAction]()
         platformMovementAction.append(SKAction.moveTo(x: -topPlatform.size.width / 2, duration: TimeInterval(platformMovementTime)))
         platformMovementAction.append(SKAction.run {
+            self.offTheScreenAlready = true
             topPlatform.removeFromParent()
         })
         
@@ -63,6 +82,12 @@ class PlatformManager {
         
         currentPlatformGroup = [topPlatform, bottomPlatform]
         initialYPositionsOfCurrentPlatformGroup = [topPlatform.position.y, bottomPlatform.position.y]
+        
+    }
+    
+    public func getPlatformID() -> String {
+        
+        return platformID
         
     }
     
@@ -109,7 +134,7 @@ class PlatformManager {
     
     public func checkForWhenThisPlatformPassesMainCube() -> Bool{
         
-        if (currentPlatformGroup[0].position.x + (currentPlatformGroup[0].size.width / 2) < xCordAtWhichCubeIsPassed) {
+        if (currentPlatformGroup[0].position.x < xCordAtWhichCubeIsPassed) {
             
             passedCubeAlready = true
             makePlatformsRubberbandBack()

@@ -7,7 +7,7 @@
 
 import SpriteKit
 
-class SharedButtonFunctions {
+class SharedFunctions {
     
     public static func createButtonClickEffect(startingScales: CGSize) -> [SKAction] {
         

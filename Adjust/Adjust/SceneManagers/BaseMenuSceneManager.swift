@@ -1,22 +1,14 @@
 //
-//  MainMenuSceneManager.swift
+//  BaseMenuSceneManager.swift
 //  Adjust
 //
-//  Created by cpsc on 4/24/21.
+//  Created by cpsc on 5/7/21.
 //
 
 import SpriteKit
 
-class MainMenuSceneManager: BaseMenuSceneManager {
-    
-    override func didMove(to view: SKView) {
-        
-        Scores.loadScoresIn()
-        initializeScene(title: "Adjust!", newGameBtnName: "newGameBtn")
-        
-    }
-    
-    /*
+class BaseMenuSceneManager: SKScene {
+
     private var newGameButton: SKSpriteNode?
     
     var doingButtonFunction = false
@@ -30,34 +22,45 @@ class MainMenuSceneManager: BaseMenuSceneManager {
     var canChangeColor = false
     var levelTimer = Timer()
     
-    override func didMove(to view: SKView) {
-        
-        print("LOADING MAIN MENU")
+    func initializeScene(title: String, newGameBtnName: String, fontSize: CGFloat = 60, newHighScore: Bool = false) {
         
         backgroundColor = SKColor(cgColor: CGColor(red: currentColorVal, green: currentColorVal, blue: currentColorVal, alpha: 1))
         levelTimer = Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(self.changeBGColor), userInfo: nil, repeats: true)
         
-        //Initialize the gamescene
+        //Initialize the game over scene
         let textColor: CGColor = CGColor(red: 173 / 255, green: 5 / 255, blue: 5 / 255, alpha: 1)
         
-        //the game title
-        let gameTitle = SKLabelNode(fontNamed: "Our-Arcade-Games")
-        gameTitle.fontSize = 60 //was 140
-        gameTitle.fontColor = UIColor(cgColor: textColor)
-        gameTitle.position = CGPoint(x: self.frame.size.width / 2, y: self.frame.size.height - (self.frame.size.height / 4.5))
-        gameTitle.text = "ADJUST!"
+        //the scene title
+        let sceneTitle = SKLabelNode(fontNamed: "Our-Arcade-Games")
+        sceneTitle.fontSize = fontSize //was 140
+        sceneTitle.fontColor = UIColor(cgColor: textColor)
+        sceneTitle.position = CGPoint(x: self.frame.size.width / 2, y: self.frame.size.height - (self.frame.size.height / 4.5))
+        sceneTitle.text = title
         
         //bobble up and down animation on game title:
-        gameTitle.run(SKAction.repeatForever(SKAction.sequence(createBobbleUpAction(startingCord: gameTitle.position))))
+        sceneTitle.run(SKAction.repeatForever(SKAction.sequence(createBobbleUpAction(startingCord: sceneTitle.position))))
         
-        self.addChild(gameTitle)
+        self.addChild(sceneTitle)
         
         //high score label:
         let highScoreLabel = SKLabelNode(fontNamed: "Our-Arcade-Games")
         highScoreLabel.fontSize = 25 //was 65
-        highScoreLabel.fontColor = UIColor(cgColor: textColor)
+
         highScoreLabel.position = CGPoint(x: self.frame.size.width / 2, y: (self.frame.size.height / 2) + (self.frame.size.height / 8.85))
-        highScoreLabel.text = "HIGH SCORE: 0"
+        if (newHighScore) {
+            
+            highScoreLabel.fontColor = UIColor.black
+            highScoreLabel.text = "NEW HIGH SCORE: \(Scores.highScore)"
+            highScoreLabel.run(SKAction.repeatForever(SKAction.sequence(createBobbleUpAction(startingCord: highScoreLabel.position))))
+            
+        }
+        else {
+            
+            highScoreLabel.fontColor = UIColor(cgColor: textColor)
+            highScoreLabel.fontColor = UIColor(cgColor: textColor)
+            highScoreLabel.text = "HIGH SCORE: \(Scores.highScore)"
+
+        }
         self.addChild(highScoreLabel)
                 
         let UISpacing: CGFloat = 80 //was 150
@@ -67,12 +70,12 @@ class MainMenuSceneManager: BaseMenuSceneManager {
         lastScoreLabel.fontSize = 25 //was 65
         lastScoreLabel.fontColor = UIColor(cgColor: textColor)
         lastScoreLabel.position = CGPoint(x: self.frame.size.width / 2, y: highScoreLabel.position.y - UISpacing)
-        lastScoreLabel.text = "LAST SCORE: 0"
+        lastScoreLabel.text = "RECENT SCORE: \(Scores.recentScore)"
         self.addChild(lastScoreLabel)
         
         //new game button:
-        newGameButton = SKSpriteNode(imageNamed: "newGameBtn")
-        newGameButton!.name = "newGameButton"
+        newGameButton = SKSpriteNode(imageNamed: newGameBtnName)
+        newGameButton!.name = "newGameBtn"
         newGameButton!.scale(to: CGSize(width: newGameButton!.size.width * 0.95, height: newGameButton!.size.height * 0.95))
         newGameButton!.position = CGPoint(x: self.frame.size.width / 2, y: lastScoreLabel.position.y - (newGameButton!.size.height / 2) - UISpacing)
         newGameButton!.zPosition = 10
@@ -131,12 +134,12 @@ class MainMenuSceneManager: BaseMenuSceneManager {
             
             let nodesArray = self.nodes(at: touchLocation)
             
-            if nodesArray.first?.name == "newGameButton" {
+            if nodesArray.first?.name == "newGameBtn" {
                 
                 doingButtonFunction = true
                 self.run(SKAction.playSoundFileNamed("buttonClick.wav", waitForCompletion: false))
                 //transition to the game scene:
-                nodesArray.first?.run(SKAction.sequence(SharedButtonFunctions.createButtonClickEffect(startingScales: newGameButton!.size)), completion: {
+                nodesArray.first?.run(SKAction.sequence(SharedFunctions.createButtonClickEffect(startingScales: newGameButton!.size)), completion: {
                     
                     let transition = SKTransition.flipVertical(withDuration: 0.5)
                     if let gameScene = GameScene(fileNamed: "GameScene") {
@@ -152,6 +155,6 @@ class MainMenuSceneManager: BaseMenuSceneManager {
             
         }
         
-    } */
+    }
     
 }

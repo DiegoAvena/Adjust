@@ -7,10 +7,12 @@
 
 import SpriteKit
 
-class GameScene: SKScene {
+class GameScene: SKScene, SKPhysicsContactDelegate {
     
-    private var cubeSpeed: CGFloat = 2.5
     private var currentScore: Int = 0
+    
+    private var gameIsEnding = false
+    private var loadingGameOverSceneAlready = false
     
     private var scoreLabel: SKLabelNode!
     
@@ -21,9 +23,7 @@ class GameScene: SKScene {
     private var pauseScreenResumeButton: SKSpriteNode?
     private var pauseScreenBG: SKSpriteNode?
     
-    private let cubeActionTag = "cubeMovement"
-    
-    private var mainCube: SKSpriteNode?
+    private var mainCube: MainCubeManager?
     
     var currentColorVal: CGFloat = 0.45
     
@@ -38,18 +38,20 @@ class GameScene: SKScene {
     var platformMovementTime: CGFloat = 3.25
     var additionalSlitSpacing: CGFloat = 15
     
+    var platformsThatHavePassedPlayerAlready: [String: PlatformManager]!
+    
     override func didMove(to view: SKView) {
+        
+        platformsThatHavePassedPlayerAlready = [:]
+        
+        physicsWorld.gravity = .zero
+        physicsWorld.contactDelegate = self
         
         backgroundColor = SKColor(cgColor: CGColor(red: currentColorVal, green: currentColorVal, blue: currentColorVal, alpha: 1))
         
         //load the main cube in:
-        mainCube = SKSpriteNode(imageNamed: "mainPlayer")
-        mainCube?.scale(to: CGSize(width: (mainCube?.size.width)! * 0.94, height: (mainCube?.size.height)! * 0.94))
-        mainCube?.position = CGPoint(x: self.frame.size.width / 2.5, y: self.frame.size.height  / 2)
+        mainCube = MainCubeManager(scene: self)
         
-        mainCube?.run(SKAction.repeatForever(SKAction.sequence(formUpAndDownAction(startingXCord: (mainCube?.position.x)!, cubeHeight: (mainCube?.size.height)!))), withKey: cubeActionTag)
-        self.addChild(mainCube!)
-                
         scoreLabel = SKLabelNode(fontNamed: "Our-Arcade-Games")
         scoreLabel.fontSize = 20
         scoreLabel.color = UIColor(cgColor: textColor)
@@ -77,25 +79,17 @@ class GameScene: SKScene {
         
     }
 
-    private func formUpAndDownAction(startingXCord: CGFloat, cubeHeight: CGFloat) -> [SKAction] {
-        
-        var moveUpAndDownAction = [SKAction]()
-        moveUpAndDownAction.append(SKAction.move(to: CGPoint(x: startingXCord , y: cubeHeight / 2), duration: TimeInterval(cubeSpeed)))
-        moveUpAndDownAction.append(SKAction.move(to: CGPoint(x: startingXCord, y: self.frame.size.height - (cubeHeight / 2)), duration: TimeInterval(cubeSpeed)))
-        return moveUpAndDownAction
-        
-    }
-    
     private func pauseGame() {
             
         gameIsPaused = true
         
         //pause all actions:
-        if let cubeAction = mainCube?.action(forKey: cubeActionTag) {
+        /*if let cubeAction = mainCube?.action(forKey: cubeActionTag) {
             
             cubeAction.speed = 0
             
-        }
+        }*/
+        mainCube?.pauseOrResumeCubeMovement(pause: true)
         
         for platform in platformsSpawnedInSoFar! {
             
@@ -139,11 +133,7 @@ class GameScene: SKScene {
         gameIsPaused = false
         
         //resume all skactions:
-        if let cubeAction = mainCube?.action(forKey: cubeActionTag) {
-            
-            cubeAction.speed = 1
-            
-        }
+        mainCube?.pauseOrResumeCubeMovement(pause: false)
         
         for platform in platformsSpawnedInSoFar! {
             
@@ -157,7 +147,7 @@ class GameScene: SKScene {
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         
-        if (doingAButtonFunctionAlready) {
+        if (doingAButtonFunctionAlready || gameIsEnding) {
             
             return
             
@@ -176,7 +166,7 @@ class GameScene: SKScene {
                     doingAButtonFunctionAlready = true
                     self.run(SKAction.playSoundFileNamed("buttonClick.wav", waitForCompletion: false))
                     //transition to the game scene:
-                    nodesArray.first?.run(SKAction.sequence(SharedButtonFunctions.createButtonClickEffect(startingScales: pauseGameButton!.size)), completion: {
+                    nodesArray.first?.run(SKAction.sequence(SharedFunctions.createButtonClickEffect(startingScales: pauseGameButton!.size)), completion: {
                         
                         self.pauseGame()
                          
@@ -189,7 +179,7 @@ class GameScene: SKScene {
                     self.run(SKAction.playSoundFileNamed("buttonClick.wav", waitForCompletion: false))
                     
                     //transition back to the main menu:
-                    nodesArray.first?.run(SKAction.sequence(SharedButtonFunctions.createButtonClickEffect(startingScales: quitGameButton!.size)), completion: {
+                    nodesArray.first?.run(SKAction.sequence(SharedFunctions.createButtonClickEffect(startingScales: quitGameButton!.size)), completion: {
                         
                         let transition = SKTransition.flipVertical(withDuration: 0.5)
                         
@@ -212,7 +202,7 @@ class GameScene: SKScene {
                     self.run(SKAction.playSoundFileNamed("buttonClick.wav", waitForCompletion: false))
                     
                     //transition back to the main menu:
-                    nodesArray.first?.run(SKAction.sequence(SharedButtonFunctions.createButtonClickEffect(startingScales: pauseScreenResumeButton!.size)), completion: {
+                    nodesArray.first?.run(SKAction.sequence(SharedFunctions.createButtonClickEffect(startingScales: pauseScreenResumeButton!.size)), completion: {
                         
                         print("RESUME GAME")
                         self.resumeGame()
@@ -231,7 +221,8 @@ class GameScene: SKScene {
         
         if ((platformsSpawnedInSoFar!.count == 0) || (platformsSpawnedInSoFar![platformsSpawnedInSoFar!.count - 1].passedCubeAlready)) {
             
-            let newPlatform = PlatformManager(scene: self, platformMovementTime: platformMovementTime, platformSlitSpacing: (mainCube!.size.height * 2) + additionalSlitSpacing, xCordAtWhichCubeIsPassed: mainCube!.position.x + (mainCube!.size.width / 2))
+            let newPlatform = PlatformManager(scene: self, platformMovementTime: platformMovementTime, platformSlitSpacing: (mainCube!.getMainCubeSize().height * 2) + additionalSlitSpacing, xCordAtWhichCubeIsPassed: mainCube!.getMainCubePosition().x + (mainCube!.getMainCubeSize().width / 3.5), platformID: "Platform\(platformsSpawnedInSoFar!.count)")
+            
             platformsSpawnedInSoFar!.append(newPlatform)
             
         }
@@ -246,50 +237,37 @@ class GameScene: SKScene {
      */
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
         
-        let touch = touches.first
-        
-        let positionInScene = touch?.location(in: self)
-        let previousPosition = touch?.previousLocation(in: self)
-        let yTranslation = (positionInScene?.y)! - (previousPosition?.y)!
-        
-        if (platformsSpawnedInSoFar!.count > 0) {
+        if (!gameIsEnding) {
             
-            if (!platformsSpawnedInSoFar![platformsSpawnedInSoFar!.count - 1].passedCubeAlready) {
+            let touch = touches.first
+            
+            let positionInScene = touch?.location(in: self)
+            let previousPosition = touch?.previousLocation(in: self)
+            let yTranslation = (positionInScene?.y)! - (previousPosition?.y)!
+            
+            if (platformsSpawnedInSoFar!.count > 0) {
                 
-                platformsSpawnedInSoFar![platformsSpawnedInSoFar!.count - 1].ManagePlatformScrolling(yTranslation: yTranslation, scene: self)
+                if (!platformsSpawnedInSoFar![platformsSpawnedInSoFar!.count - 1].passedCubeAlready) {
+                    
+                    platformsSpawnedInSoFar![platformsSpawnedInSoFar!.count - 1].ManagePlatformScrolling(yTranslation: yTranslation, scene: self)
+                    
+                }
                 
             }
-            
+
         }
         
     }
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         
-        if (platformsSpawnedInSoFar!.count > 0) {
+        if (!gameIsEnding) {
             
-            if (!platformsSpawnedInSoFar![platformsSpawnedInSoFar!.count - 1].passedCubeAlready) {
+            if (platformsSpawnedInSoFar!.count > 0) {
                 
-                platformsSpawnedInSoFar![platformsSpawnedInSoFar!.count - 1].makePlatformsRubberbandBack()
-                
-            }
-            
-        }
-        
-    }
-    
-    override func update(_ currentTime: TimeInterval) {
-        
-        if (platformsSpawnedInSoFar!.count > 0) {
-            
-            if (!platformsSpawnedInSoFar![platformsSpawnedInSoFar!.count - 1].passedCubeAlready) {
-                
-                if (platformsSpawnedInSoFar![platformsSpawnedInSoFar!.count - 1].checkForWhenThisPlatformPassesMainCube()) {
+                if (!platformsSpawnedInSoFar![platformsSpawnedInSoFar!.count - 1].passedCubeAlready) {
                     
-                    //increase player score:
-                    currentScore += 1
-                    scoreLabel.text = "Score: \(currentScore)"
-                    self.run(SKAction.playSoundFileNamed("scoreSound", waitForCompletion: false))
+                    platformsSpawnedInSoFar![platformsSpawnedInSoFar!.count - 1].makePlatformsRubberbandBack()
                     
                 }
                 
@@ -297,7 +275,137 @@ class GameScene: SKScene {
             
         }
         
-        self.tryToSpawnSomePlatforms()
+    }
+    
+    private func removeInActivePlatformsFromDodgedPlatformsCollection() {
+        
+        var IDsOfPlatformsToRemove: [String] = []
+        for (platformID, platformManager) in platformsThatHavePassedPlayerAlready {
+            
+            if (platformManager.offTheScreenAlready) {
+                
+                IDsOfPlatformsToRemove.append(platformID)
+                
+            }
+            
+        }
+        
+        for IDOfPlatformToRemove in IDsOfPlatformsToRemove {
+            
+            platformsThatHavePassedPlayerAlready.removeValue(forKey: IDOfPlatformToRemove)
+            
+        }
+        
+    }
+    
+    override func update(_ currentTime: TimeInterval) {
+        
+        if (!gameIsEnding) {
+            
+            if (platformsSpawnedInSoFar!.count > 0) {
+                
+                if (!platformsSpawnedInSoFar![platformsSpawnedInSoFar!.count - 1].passedCubeAlready) {
+                    
+                    if (platformsSpawnedInSoFar![platformsSpawnedInSoFar!.count - 1].checkForWhenThisPlatformPassesMainCube()) {
+                        
+                        /*
+     
+                            place this into the platforms that player has dodged dictionary
+                            so that if it collides with the cube on retract, the collision
+                            is not counted
+                         
+                        */
+                        platformsThatHavePassedPlayerAlready[platformsSpawnedInSoFar![platformsSpawnedInSoFar!.count - 1].getPlatformID()] = platformsSpawnedInSoFar![platformsSpawnedInSoFar!.count - 1]
+                        
+                        removeInActivePlatformsFromDodgedPlatformsCollection()
+                        
+                        //increase player score:
+                        currentScore += 1
+                        scoreLabel.text = "Score: \(currentScore)"
+                        self.run(SKAction.playSoundFileNamed("scoreSound", waitForCompletion: false))
+                        
+                    }
+                    
+                }
+                
+            }
+            
+            self.tryToSpawnSomePlatforms()
+            
+        }
+        else if (mainCube!.isDead && !loadingGameOverSceneAlready) {
+            
+            //start transitioning to game over scene:
+            print("load game over scene")
+            let transition = SKTransition.flipVertical(withDuration: 0.5)
+            if let gameOverScene = GameOverSceneManager(fileNamed: "GameOverScene") {
+                
+                Scores.recentScore = currentScore
+                self.view?.presentScene(gameOverScene, transition: transition)
+                loadingGameOverSceneAlready = true
+                
+            }
+            
+        }
+        
+    }
+    
+    func didBegin(_ contact: SKPhysicsContact) {
+        
+        
+        if (!gameIsEnding) {
+            
+            var firstBody: SKPhysicsBody //will store the potential main cube
+            var secondBody: SKPhysicsBody //will store the potential platform or powerup hit
+            
+            if (contact.bodyA.categoryBitMask < contact.bodyB.categoryBitMask) {
+                
+                firstBody = contact.bodyA
+                secondBody = contact.bodyB
+                
+            }
+            else {
+                
+                firstBody = contact.bodyB
+                secondBody = contact.bodyA
+                
+            }
+            
+            if ((firstBody.categoryBitMask & PhysicsCategories.mainCube) != 0) {
+                
+                //the main cube has hit something:
+                if ((secondBody.categoryBitMask & PhysicsCategories.platforms) != 0) {
+                    
+                    if (platformsThatHavePassedPlayerAlready[(secondBody.node!.name)!] != nil) {
+                        
+                        //the cube hit a platform that it already passed
+                        return
+                        
+                    }
+                    
+                    //the main cube hit a platform and should explode:
+                    print("main cube hit platform and should explode")
+                    gameIsEnding = true
+                    
+                    //pause all platform movement:
+                    for platform in platformsSpawnedInSoFar! {
+                        
+                        platform.pauseOrUnpauseAllPlatformMovement(pause: true)
+                        
+                    }
+                    
+                    mainCube?.doDeath()
+                    
+                }
+                else if ((secondBody.categoryBitMask & PhysicsCategories.powerUps) != 0) {
+                    
+                    print("Main cube hit a power up!")
+                    
+                }
+            
+            }
+            
+        }
         
     }
     
