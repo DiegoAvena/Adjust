@@ -27,6 +27,8 @@ class PlatformManager {
     
     let colliderSizeDownScaleFactor: CGFloat = 1.115
     
+    private var spawnedPowerUp: PowerUpBaseManager?
+    
     private func setUpPhysicsOnPlatform(colliderSize: CGSize) -> SKPhysicsBody {
         
         let boxCollider = SKPhysicsBody(rectangleOf: CGSize(width: colliderSize.width / colliderSizeDownScaleFactor, height: colliderSize.height / colliderSizeDownScaleFactor))
@@ -47,12 +49,19 @@ class PlatformManager {
         self.xCordAtWhichCubeIsPassed = xCordAtWhichCubeIsPassed
         
         let topPlatform = SKSpriteNode(imageNamed: "platform")
+        
+        //this number needed to insure correct scaling of power up icon:
+        let heightRescaleFactor = scene.frame.size.height / topPlatform.size.height
+        
         topPlatform.scale(to: CGSize(width: topPlatform.size.width, height: scene.frame.size.height))
         topPlatform.position = CGPoint(x: scene.frame.size.width * 1.5, y: scene.frame.size.height + (platformSlitSpacing / 2))
         topPlatform.colorBlendFactor = 1
         topPlatform.color = UIColor(cgColor: CGColor(red: 1, green: 0, blue: 0, alpha: 1))
         topPlatform.name = platformID
         topPlatform.physicsBody = setUpPhysicsOnPlatform(colliderSize: topPlatform.size)
+        
+        // spawn in a power up:
+        //let ghostPowerUp = PowerUpBaseManager(parentNode: topPlatform, upperBound: (-(topPlatform.size.height / heightRescaleFactor) / 2), lowerBound: (-platformSlitSpacing / 2) / heightRescaleFactor , powerUpName: "ghostPowerUp", heightRescaleFactor: heightRescaleFactor)
         
         let bottomPlatform = SKSpriteNode(imageNamed: "platform")
         bottomPlatform.scale(to: CGSize(width: topPlatform.size.width, height: scene.frame.size.height))
@@ -61,6 +70,9 @@ class PlatformManager {
         bottomPlatform.color = UIColor(cgColor: CGColor(red: 1, green: 0, blue: 0, alpha: 1))
         bottomPlatform.name = platformID
         bottomPlatform.physicsBody = setUpPhysicsOnPlatform(colliderSize: bottomPlatform.size)
+        
+        //let ghostPowerUpTwo = PowerUpBaseManager(parentNode: bottomPlatform, upperBound: ((platformSlitSpacing / 2) / heightRescaleFactor), lowerBound:  ((bottomPlatform.size.height / heightRescaleFactor) / 2), powerUpName: "resetPowerUp", heightRescaleFactor: heightRescaleFactor)
+        spawnedPowerUp = PowerUpBaseManager(parentNode: bottomPlatform, upperBound: ((platformSlitSpacing / 2) / heightRescaleFactor), lowerBound:  ((bottomPlatform.size.height / heightRescaleFactor) / 2), powerUpName: "resetPowerUp", heightRescaleFactor: heightRescaleFactor)
         
         var platformMovementAction = [SKAction]()
         platformMovementAction.append(SKAction.moveTo(x: -topPlatform.size.width / 2, duration: TimeInterval(platformMovementTime)))
@@ -154,6 +166,12 @@ class PlatformManager {
     }
     
     public func pauseOrUnpauseAllPlatformMovement(pause: Bool) {
+        
+        if (spawnedPowerUp != nil) {
+            
+            spawnedPowerUp!.pauseOrUnPausePowerUp(pause: pause)
+            
+        }
         
         for platform in currentPlatformGroup {
             

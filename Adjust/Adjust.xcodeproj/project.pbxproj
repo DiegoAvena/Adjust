@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AA01B04C2649CB000067332F /* ghostPowerUpCollect.atlas in Resources */ = {isa = PBXBuildFile; fileRef = AA01B04B2649CB000067332F /* ghostPowerUpCollect.atlas */; };
+		AA01B04F2649CB060067332F /* resetPowerUpCollect.atlas in Resources */ = {isa = PBXBuildFile; fileRef = AA01B04E2649CB060067332F /* resetPowerUpCollect.atlas */; };
+		AA01B0522649DB390067332F /* PowerUpBaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01B0512649DB390067332F /* PowerUpBaseManager.swift */; };
 		AA0E7B4326462D880093EF97 /* PhysicsCategories.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0E7B4226462D880093EF97 /* PhysicsCategories.swift */; };
 		AA0E7B462646359B0093EF97 /* MainCubeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0E7B452646359B0093EF97 /* MainCubeManager.swift */; };
 		AA0E7B4926463A0B0093EF97 /* playerDeath.atlas in Resources */ = {isa = PBXBuildFile; fileRef = AA0E7B4826463A0B0093EF97 /* playerDeath.atlas */; };
@@ -37,6 +40,9 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		AA01B04B2649CB000067332F /* ghostPowerUpCollect.atlas */ = {isa = PBXFileReference; lastKnownFileType = folder.skatlas; name = ghostPowerUpCollect.atlas; path = ../../ghostPowerUpCollect.atlas; sourceTree = "<group>"; };
+		AA01B04E2649CB060067332F /* resetPowerUpCollect.atlas */ = {isa = PBXFileReference; lastKnownFileType = folder.skatlas; name = resetPowerUpCollect.atlas; path = ../../resetPowerUpCollect.atlas; sourceTree = "<group>"; };
+		AA01B0512649DB390067332F /* PowerUpBaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowerUpBaseManager.swift; sourceTree = "<group>"; };
 		AA0E7B4226462D880093EF97 /* PhysicsCategories.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhysicsCategories.swift; sourceTree = "<group>"; };
 		AA0E7B452646359B0093EF97 /* MainCubeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainCubeManager.swift; sourceTree = "<group>"; };
 		AA0E7B4826463A0B0093EF97 /* playerDeath.atlas */ = {isa = PBXFileReference; lastKnownFileType = folder.skatlas; path = playerDeath.atlas; sourceTree = "<group>"; };
@@ -82,6 +88,9 @@
 		AA7D8C2E263506BA00D24CE2 = {
 			isa = PBXGroup;
 			children = (
+				AA01B0512649DB390067332F /* PowerUpBaseManager.swift */,
+				AA01B04E2649CB060067332F /* resetPowerUpCollect.atlas */,
+				AA01B04B2649CB000067332F /* ghostPowerUpCollect.atlas */,
 				AA0E7B5126465C2A0093EF97 /* Scores.swift */,
 				AA0E7B4826463A0B0093EF97 /* playerDeath.atlas */,
 				AA0E7B452646359B0093EF97 /* MainCubeManager.swift */,
@@ -225,8 +234,10 @@
 				AA7D8C5C26350C4900D24CE2 /* collectingGhostPowerUpSound.wav in Resources */,
 				AA7D8C46263506BA00D24CE2 /* Main.storyboard in Resources */,
 				AA7D8C6926350F0C00D24CE2 /* MainMenu.sks in Resources */,
+				AA01B04C2649CB000067332F /* ghostPowerUpCollect.atlas in Resources */,
 				AA7D8C3D263506BA00D24CE2 /* GameScene.sks in Resources */,
 				AA0E7B4926463A0B0093EF97 /* playerDeath.atlas in Resources */,
+				AA01B04F2649CB060067332F /* resetPowerUpCollect.atlas in Resources */,
 				AA7D8C5D26350C4900D24CE2 /* collectingDifficultyResetPowerUp.wav in Resources */,
 				AA7D8C6426350C8A00D24CE2 /* Our-Arcade-Games.ttf in Resources */,
 				AA7D8C48263506BB00D24CE2 /* Assets.xcassets in Resources */,
@@ -256,6 +267,7 @@
 				AA55B66E263FDD2800AE16C0 /* PlatformManager.swift in Sources */,
 				AA7D8C3B263506BA00D24CE2 /* AppDelegate.swift in Sources */,
 				AA0E7B462646359B0093EF97 /* MainCubeManager.swift in Sources */,
+				AA01B0522649DB390067332F /* PowerUpBaseManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

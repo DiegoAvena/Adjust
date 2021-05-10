@@ -33,7 +33,6 @@ class MainCubeManager {
             explosionFrames.append(SKTexture(imageNamed: "collect\(i)"))
             
         }
-        print(explosionFrames)
         
         mainCube = SKSpriteNode(imageNamed: "mainPlayer")
         mainCube.scale(to: CGSize(width: mainCube.size.width * 0.94, height: mainCube.size.height * 0.94))
