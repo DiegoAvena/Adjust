@@ -21,6 +21,7 @@ class DifficultyResetPowerUpManager: PowerUpBaseManager {
     
     override public func doPowerUpFunctionality(gameManager: GameScene) {
         
+        gameManager.resetDifficulty()
         super.doPowerUpFunctionality(gameManager: gameManager)
         
     }

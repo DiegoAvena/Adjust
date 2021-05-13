@@ -31,7 +31,7 @@ class PlatformManager {
     
     public var spawnedPowerUp: PowerUpBaseManager?
     public var ghostModeActive: Bool = false
-    
+            
     private func setUpPhysicsOnPlatform(colliderSize: CGSize) -> SKPhysicsBody {
         
         let boxCollider = SKPhysicsBody(rectangleOf: CGSize(width: colliderSize.width / colliderSizeDownScaleFactor, height: colliderSize.height / colliderSizeDownScaleFactor))
@@ -69,6 +69,8 @@ class PlatformManager {
     
     init(scene: SKScene, platformMovementTime: CGFloat, platformSlitSpacing: CGFloat, xCordAtWhichCubeIsPassed: CGFloat, platformID: String, canAttemptToSpawnPowerUp: Bool) {
         
+        platformColor = DifficultyScales.difficultyColors[DifficultyScales.currentDifficulty][1]
+        
         self.platformID = platformID
         
         self.platformMovementTime = platformMovementTime
@@ -99,8 +101,52 @@ class PlatformManager {
         
         if (canAttemptToSpawnPowerUp) {
             
-            spawnedPowerUp = GhostPowerUpManager(parentNode: bottomPlatform, upperBound: ((platformSlitSpacing / 2) / heightRescaleFactor), lowerBound:  ((bottomPlatform.size.height / heightRescaleFactor) / 2), heightRescaleFactor: heightRescaleFactor)
-            
+            if (DifficultyScales.determineIfPowerUpCanSpawn()) {
+                
+                var parentNode: SKSpriteNode
+                var upperBound: CGFloat
+                var lowerBound: CGFloat
+                
+                if (Int.random(in: 0..<2) == 0) {
+                    
+                    //spawn on top platform
+                    parentNode = topPlatform
+                    upperBound = -(topPlatform.size.height / heightRescaleFactor) / 2
+                    lowerBound = (-platformSlitSpacing / 2) / heightRescaleFactor
+                    
+                }
+                else {
+                    
+                    //spawn on bottom platform
+                    parentNode = bottomPlatform
+                    upperBound = (platformSlitSpacing / 2) / heightRescaleFactor
+                    lowerBound = (bottomPlatform.size.height / heightRescaleFactor) / 2
+                    
+                }
+                
+                var spawningInDifficultyResetPowerUp = false
+                if (DifficultyScales.currentDifficulty == DifficultyScales.getMaxDifficulty()) {
+                    
+                    //can potentially spawn a reset difficulty power up:
+                    if (Int.random(in: 0..<2) == 0) {
+                        
+                        //spawn in a reset difficulty power up
+                        spawnedPowerUp = DifficultyResetPowerUpManager(parentNode: parentNode, upperBound: upperBound, lowerBound: lowerBound, heightRescaleFactor: heightRescaleFactor)
+                        spawningInDifficultyResetPowerUp = true
+                    
+                    }
+                    
+                }
+                
+                if (!spawningInDifficultyResetPowerUp) {
+                    
+                    //spawn ghost power up in
+                    spawnedPowerUp = GhostPowerUpManager(parentNode: parentNode, upperBound: upperBound, lowerBound: lowerBound, heightRescaleFactor: heightRescaleFactor)
+                    
+                }
+                
+            }
+        
         }
         
         var platformMovementAction = [SKAction]()
@@ -118,12 +164,13 @@ class PlatformManager {
         platformMovementAction.append(SKAction.run {
             bottomPlatform.removeFromParent()
         })
+        
         bottomPlatform.run(SKAction.sequence(platformMovementAction), withKey: platformMovementTag)
         scene.addChild(bottomPlatform)
         
         currentPlatformGroup = [topPlatform, bottomPlatform]
         initialYPositionsOfCurrentPlatformGroup = [topPlatform.position.y, bottomPlatform.position.y]
-        
+                
     }
     
     public func getPlatformID() -> String {
@@ -181,10 +228,11 @@ class PlatformManager {
             makePlatformsRubberbandBack()
             
             currentPlatformGroup[0].colorBlendFactor = 1
-            currentPlatformGroup[0].color = UIColor(cgColor: CGColor(red: 0, green: 1, blue: 0.65, alpha: 1))
+            let collectionColor = CGColor(red: 51/255, green: 110/255, blue: 47/255, alpha: 1)
+            currentPlatformGroup[0].color = UIColor(cgColor: collectionColor)
             
             currentPlatformGroup[1].colorBlendFactor = 1
-            currentPlatformGroup[1].color = UIColor(cgColor: CGColor(red: 0, green: 1, blue: 0.65, alpha: 1))
+            currentPlatformGroup[1].color = UIColor(cgColor: collectionColor)
             
             return true
             

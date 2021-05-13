@@ -27,7 +27,7 @@ class PowerUpBaseManager {
         thePowerUp.zPosition = 1
         
         //set up the physics for this power up so it can be collided with
-        thePowerUp.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: thePowerUp.size.width / 1.5, height: thePowerUp.size.height / 1.5))
+        thePowerUp.physicsBody = SKPhysicsBody(rectangleOf: thePowerUp.size)
         thePowerUp.physicsBody!.categoryBitMask = PhysicsCategories.powerUps
         thePowerUp.physicsBody!.contactTestBitMask = PhysicsCategories.mainCube
         thePowerUp.physicsBody!.collisionBitMask = PhysicsCategories.none

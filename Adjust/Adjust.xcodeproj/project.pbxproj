@@ -37,6 +37,7 @@
 		AA7D8C6926350F0C00D24CE2 /* MainMenu.sks in Resources */ = {isa = PBXBuildFile; fileRef = AA7D8C6826350F0C00D24CE2 /* MainMenu.sks */; };
 		AA7D8C6C26350F2100D24CE2 /* GameOverScene.sks in Resources */ = {isa = PBXBuildFile; fileRef = AA7D8C6B26350F2100D24CE2 /* GameOverScene.sks */; };
 		AA7D8C6F26350F5800D24CE2 /* MainMenuSceneManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA7D8C6E26350F5800D24CE2 /* MainMenuSceneManager.swift */; };
+		AA86A007264CF66D00BDAB82 /* DifficultyScales.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA86A006264CF66D00BDAB82 /* DifficultyScales.swift */; };
 		AABBA610264C748D00A83ACD /* resetPowerUpCollect.atlas in Resources */ = {isa = PBXBuildFile; fileRef = AABBA60F264C748D00A83ACD /* resetPowerUpCollect.atlas */; };
 		AABBA614264C74CC00A83ACD /* ghostPowerUpCollect.atlas in Resources */ = {isa = PBXBuildFile; fileRef = AABBA613264C74CC00A83ACD /* ghostPowerUpCollect.atlas */; };
 /* End PBXBuildFile section */
@@ -74,6 +75,7 @@
 		AA7D8C6826350F0C00D24CE2 /* MainMenu.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = MainMenu.sks; sourceTree = "<group>"; };
 		AA7D8C6B26350F2100D24CE2 /* GameOverScene.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = GameOverScene.sks; sourceTree = "<group>"; };
 		AA7D8C6E26350F5800D24CE2 /* MainMenuSceneManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainMenuSceneManager.swift; sourceTree = "<group>"; };
+		AA86A006264CF66D00BDAB82 /* DifficultyScales.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DifficultyScales.swift; sourceTree = "<group>"; };
 		AABBA60F264C748D00A83ACD /* resetPowerUpCollect.atlas */ = {isa = PBXFileReference; lastKnownFileType = folder.skatlas; name = resetPowerUpCollect.atlas; path = ../../resetPowerUpCollect.atlas; sourceTree = "<group>"; };
 		AABBA613264C74CC00A83ACD /* ghostPowerUpCollect.atlas */ = {isa = PBXFileReference; lastKnownFileType = folder.skatlas; name = ghostPowerUpCollect.atlas; path = ../../ghostPowerUpCollect.atlas; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -102,6 +104,7 @@
 		AA7D8C2E263506BA00D24CE2 = {
 			isa = PBXGroup;
 			children = (
+				AA86A006264CF66D00BDAB82 /* DifficultyScales.swift */,
 				AABBA613264C74CC00A83ACD /* ghostPowerUpCollect.atlas */,
 				AABBA60F264C748D00A83ACD /* resetPowerUpCollect.atlas */,
 				AA49D708264C697F00815251 /* PowerUps */,
@@ -276,6 +279,7 @@
 				AA7D8C41263506BA00D24CE2 /* GameScene.swift in Sources */,
 				AA0E7B4C264657200093EF97 /* GameOverSceneManager.swift in Sources */,
 				AA49D706264C697A00815251 /* DifficultyResetPowerUpManager.swift in Sources */,
+				AA86A007264CF66D00BDAB82 /* DifficultyScales.swift in Sources */,
 				AA49D703264C696200815251 /* GhostPowerUpManager.swift in Sources */,
 				AA55B665263FA53000AE16C0 /* SharedButtonFunctions.swift in Sources */,
 				AA7D8C43263506BA00D24CE2 /* GameViewController.swift in Sources */,
