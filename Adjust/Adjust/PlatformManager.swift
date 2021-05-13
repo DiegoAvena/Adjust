@@ -27,7 +27,10 @@ class PlatformManager {
     
     let colliderSizeDownScaleFactor: CGFloat = 1.115
     
-    private var spawnedPowerUp: PowerUpBaseManager?
+    private var platformColor = CGColor(red: 1, green: 0, blue: 0, alpha: 1)
+    
+    public var spawnedPowerUp: PowerUpBaseManager?
+    public var ghostModeActive: Bool = false
     
     private func setUpPhysicsOnPlatform(colliderSize: CGSize) -> SKPhysicsBody {
         
@@ -41,7 +44,30 @@ class PlatformManager {
         
     }
     
-    init(scene: SKScene, platformMovementTime: CGFloat, platformSlitSpacing: CGFloat, xCordAtWhichCubeIsPassed: CGFloat, platformID: String) {
+    public func toggleGhostMode(on: Bool) {
+        
+        if (on) {
+            
+            platformColor = CGColor(red: 1, green: 0, blue: 0, alpha: 0.5)
+            
+        }
+        else {
+            
+            platformColor = CGColor(red: 1, green: 0, blue: 0, alpha: 1)
+            
+        }
+        
+        ghostModeActive = on
+        
+        for platform in currentPlatformGroup {
+            
+            platform.color = UIColor(cgColor: platformColor)
+            
+        }
+        
+    }
+    
+    init(scene: SKScene, platformMovementTime: CGFloat, platformSlitSpacing: CGFloat, xCordAtWhichCubeIsPassed: CGFloat, platformID: String, canAttemptToSpawnPowerUp: Bool) {
         
         self.platformID = platformID
         
@@ -56,7 +82,7 @@ class PlatformManager {
         topPlatform.scale(to: CGSize(width: topPlatform.size.width, height: scene.frame.size.height))
         topPlatform.position = CGPoint(x: scene.frame.size.width * 1.5, y: scene.frame.size.height + (platformSlitSpacing / 2))
         topPlatform.colorBlendFactor = 1
-        topPlatform.color = UIColor(cgColor: CGColor(red: 1, green: 0, blue: 0, alpha: 1))
+        topPlatform.color = UIColor(cgColor: platformColor)
         topPlatform.name = platformID
         topPlatform.physicsBody = setUpPhysicsOnPlatform(colliderSize: topPlatform.size)
         
@@ -67,12 +93,15 @@ class PlatformManager {
         bottomPlatform.scale(to: CGSize(width: topPlatform.size.width, height: scene.frame.size.height))
         bottomPlatform.position = CGPoint(x: scene.frame.size.width * 1.5, y: 0 - (platformSlitSpacing / 2))
         bottomPlatform.colorBlendFactor = 1
-        bottomPlatform.color = UIColor(cgColor: CGColor(red: 1, green: 0, blue: 0, alpha: 1))
+        bottomPlatform.color = UIColor(cgColor: platformColor)
         bottomPlatform.name = platformID
         bottomPlatform.physicsBody = setUpPhysicsOnPlatform(colliderSize: bottomPlatform.size)
         
-        //let ghostPowerUpTwo = PowerUpBaseManager(parentNode: bottomPlatform, upperBound: ((platformSlitSpacing / 2) / heightRescaleFactor), lowerBound:  ((bottomPlatform.size.height / heightRescaleFactor) / 2), powerUpName: "resetPowerUp", heightRescaleFactor: heightRescaleFactor)
-        spawnedPowerUp = PowerUpBaseManager(parentNode: bottomPlatform, upperBound: ((platformSlitSpacing / 2) / heightRescaleFactor), lowerBound:  ((bottomPlatform.size.height / heightRescaleFactor) / 2), powerUpName: "resetPowerUp", heightRescaleFactor: heightRescaleFactor)
+        if (canAttemptToSpawnPowerUp) {
+            
+            spawnedPowerUp = GhostPowerUpManager(parentNode: bottomPlatform, upperBound: ((platformSlitSpacing / 2) / heightRescaleFactor), lowerBound:  ((bottomPlatform.size.height / heightRescaleFactor) / 2), heightRescaleFactor: heightRescaleFactor)
+            
+        }
         
         var platformMovementAction = [SKAction]()
         platformMovementAction.append(SKAction.moveTo(x: -topPlatform.size.width / 2, duration: TimeInterval(platformMovementTime)))

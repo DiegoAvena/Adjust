@@ -11,6 +11,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     private var currentScore: Int = 0
     
+    
+    private var numberOfPlatformsOnScreenStill = 0
+    
     private var gameIsEnding = false
     private var loadingGameOverSceneAlready = false
     
@@ -34,11 +37,23 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     let textColor: CGColor = CGColor(red: 173 / 255, green: 5 / 255, blue: 5 / 255, alpha: 1)
     
-    var platformsSpawnedInSoFar: [PlatformManager]?
-    var platformMovementTime: CGFloat = 3.25
+    var currentPlatformThatPlayerNeedsToDodge: PlatformManager?
+    
+    //difficulty increases
+    let platformMovementTimes: [CGFloat] = [3, 2.5, 2, 1.5, 1.15]
+    var currentDifficulty = 0
+    var platformMovementTime: CGFloat = 3
+    let difficultyIncreaseInterval = 10 //increase the difficulty every 10 secs
+    let difficultyIncreaseActionTag = "difficultyIncreaseAction" //an ID used to pause or unpause the action
+    
     var additionalSlitSpacing: CGFloat = 15
     
     var platformsThatHavePassedPlayerAlready: [String: PlatformManager]!
+    
+    //ghost power up
+    public var ghostPowerUpActive: Bool = false
+    let numberOfPlatformsPlayerCanSkipWhileGhostPowerUpIsActive = 4
+    var currentNumberOfPlatformsPlayerHasPassedWhileGhostPowerUpWasActive = 0
     
     override func didMove(to view: SKView) {
         
@@ -74,11 +89,84 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         quitGameButton.zPosition = 10
         self.addChild(quitGameButton)
         
-        platformsSpawnedInSoFar = [PlatformManager]()
         self.tryToSpawnSomePlatforms()
         
+        var difficultyIncreaseAction: [SKAction] = []
+        difficultyIncreaseAction.append(SKAction.wait(forDuration: TimeInterval(difficultyIncreaseInterval)))
+        difficultyIncreaseAction.append(SKAction.run {
+            
+            if ((self.currentDifficulty + 1) < self.platformMovementTimes.count) {
+                
+                //not yet at max speed:
+                self.currentDifficulty+=1
+                self.platformMovementTime = self.platformMovementTimes[self.currentDifficulty]
+                print("INCREASE DIFFICULTY TO: \(self.currentDifficulty)")
+                
+            }
+            
+        })
+        
+        //will gradually increment the difficulty
+        self.run(SKAction.repeatForever(SKAction.sequence(difficultyIncreaseAction)), withKey: difficultyIncreaseActionTag)
+        
     }
+    
+    /*
+     
+     I would have liked to put this method inside of the
+     ghost power up manager but the ghost power up will get destroyed
+     with the platform it is on when that platform exits the screen,
+     preventing this countdown action from ever completing and keeping
+     that power up on for the rest of the game, so I decided to just run
+     the countdown right here from within the game manager, and it is called from the
+     ghost powerup manager class
+     
+     */
+    private func manageGhostPowerUpActivity() {
+        
+        if (ghostPowerUpActive) {
+            
+            if (currentNumberOfPlatformsPlayerHasPassedWhileGhostPowerUpWasActive >= numberOfPlatformsPlayerCanSkipWhileGhostPowerUpIsActive) {
+                
+                ghostPowerUpActive = false
+                currentNumberOfPlatformsPlayerHasPassedWhileGhostPowerUpWasActive = 0
+                currentPlatformThatPlayerNeedsToDodge!.toggleGhostMode(on: false)
 
+                /*for platformSpawnedIn in platformsSpawnedInSoFar! {
+                    
+                    if (!platformSpawnedIn.ghostModeActive) {
+                        
+                        platformSpawnedIn.toggleGhostMode(on: false)
+                        
+                    }
+                    
+                }*/
+                
+            }
+            else {
+                
+                /*for platformSpawnedIn in platformsSpawnedInSoFar! {
+                    
+                    if (!platformSpawnedIn.ghostModeActive) {
+                        
+                        platformSpawnedIn.toggleGhostMode(on: true)
+                        
+                    }
+                    
+                } */
+                if (!currentPlatformThatPlayerNeedsToDodge!.ghostModeActive) {
+                    
+                    currentPlatformThatPlayerNeedsToDodge!.toggleGhostMode(on: true)
+                    
+                }
+                
+            }
+            
+            
+        }
+        
+    }
+    
     private func pauseGame() {
             
         gameIsPaused = true
@@ -91,9 +179,46 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }*/
         mainCube?.pauseOrResumeCubeMovement(pause: true)
         
-        for platform in platformsSpawnedInSoFar! {
+        /*for platform in platformsSpawnedInSoFar! {
             
             platform.pauseOrUnpauseAllPlatformMovement(pause: true)
+            
+        } */
+        if (currentPlatformThatPlayerNeedsToDodge != nil) {
+            
+            currentPlatformThatPlayerNeedsToDodge?.pauseOrUnpauseAllPlatformMovement(pause: true)
+            
+        }
+        
+        /*
+         
+         
+         if let platformAction = platform.action(forKey: platformMovementTag) {
+             
+             if (pause) {
+                 
+                 platformAction.speed = 0
+                 
+             }
+             else {
+                 
+                 platformAction.speed = 1
+                 
+             }
+             
+         }
+         
+         */
+        //pause difficulty increase action:
+        if let difficultyIncreaseAction = self.action(forKey: difficultyIncreaseActionTag) {
+            
+            difficultyIncreaseAction.speed = 0
+            
+        }
+        
+        for (platformID, _) in platformsThatHavePassedPlayerAlready {
+            
+            platformsThatHavePassedPlayerAlready[platformID]?.pauseOrUnpauseAllPlatformMovement(pause: true)
             
         }
         
@@ -135,11 +260,30 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         //resume all skactions:
         mainCube?.pauseOrResumeCubeMovement(pause: false)
         
+        if (currentPlatformThatPlayerNeedsToDodge != nil) {
+            
+            currentPlatformThatPlayerNeedsToDodge!.pauseOrUnpauseAllPlatformMovement(pause: false)
+            
+        }
+        
+        for (platformID, _) in platformsThatHavePassedPlayerAlready {
+            
+            platformsThatHavePassedPlayerAlready[platformID]?.pauseOrUnpauseAllPlatformMovement(pause: false)
+            
+        }
+        
+        if let difficultyIncreaseAction = self.action(forKey: difficultyIncreaseActionTag) {
+            
+            difficultyIncreaseAction.speed = 1
+            
+        }
+        
+        /*
         for platform in platformsSpawnedInSoFar! {
             
             platform.pauseOrUnpauseAllPlatformMovement(pause: false)
             
-        }
+        } */
         
         doingAButtonFunctionAlready = false
         
@@ -219,11 +363,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     private func tryToSpawnSomePlatforms() {
         
-        if ((platformsSpawnedInSoFar!.count == 0) || (platformsSpawnedInSoFar![platformsSpawnedInSoFar!.count - 1].passedCubeAlready)) {
+        if (/*(platformsSpawnedInSoFar!.count == 0) || (platformsSpawnedInSoFar![platformsSpawnedInSoFar!.count - 1].passedCubeAlready)*/(currentPlatformThatPlayerNeedsToDodge == nil) || currentPlatformThatPlayerNeedsToDodge!.passedCubeAlready) {
+                        
+            let newPlatform = PlatformManager(scene: self, platformMovementTime: platformMovementTime, platformSlitSpacing: (mainCube!.getMainCubeSize().height * 2) + additionalSlitSpacing, xCordAtWhichCubeIsPassed: mainCube!.getMainCubePosition().x + (mainCube!.getMainCubeSize().width / 3.5), platformID: "Platform\(/*platformsSpawnedInSoFar!.count*/numberOfPlatformsOnScreenStill)", canAttemptToSpawnPowerUp: !ghostPowerUpActive)
             
-            let newPlatform = PlatformManager(scene: self, platformMovementTime: platformMovementTime, platformSlitSpacing: (mainCube!.getMainCubeSize().height * 2) + additionalSlitSpacing, xCordAtWhichCubeIsPassed: mainCube!.getMainCubePosition().x + (mainCube!.getMainCubeSize().width / 3.5), platformID: "Platform\(platformsSpawnedInSoFar!.count)")
+            numberOfPlatformsOnScreenStill+=1
             
-            platformsSpawnedInSoFar!.append(newPlatform)
+            //platformsSpawnedInSoFar!.append(newPlatform)
+            currentPlatformThatPlayerNeedsToDodge = newPlatform
             
         }
         
@@ -245,11 +392,20 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             let previousPosition = touch?.previousLocation(in: self)
             let yTranslation = (positionInScene?.y)! - (previousPosition?.y)!
             
-            if (platformsSpawnedInSoFar!.count > 0) {
+            /*if (platformsSpawnedInSoFar!.count > 0) {
                 
                 if (!platformsSpawnedInSoFar![platformsSpawnedInSoFar!.count - 1].passedCubeAlready) {
                     
                     platformsSpawnedInSoFar![platformsSpawnedInSoFar!.count - 1].ManagePlatformScrolling(yTranslation: yTranslation, scene: self)
+                    
+                }
+                
+            }*/
+            if (currentPlatformThatPlayerNeedsToDodge != nil) {
+                
+                if (!currentPlatformThatPlayerNeedsToDodge!.passedCubeAlready) {
+                    
+                    currentPlatformThatPlayerNeedsToDodge?.ManagePlatformScrolling(yTranslation: yTranslation, scene: self)
                     
                 }
                 
@@ -263,11 +419,20 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         if (!gameIsEnding) {
             
-            if (platformsSpawnedInSoFar!.count > 0) {
+            /*if (platformsSpawnedInSoFar!.count > 0) {
                 
                 if (!platformsSpawnedInSoFar![platformsSpawnedInSoFar!.count - 1].passedCubeAlready) {
                     
                     platformsSpawnedInSoFar![platformsSpawnedInSoFar!.count - 1].makePlatformsRubberbandBack()
+                    
+                }
+                
+            } */
+            if (currentPlatformThatPlayerNeedsToDodge != nil) {
+                
+                if (!currentPlatformThatPlayerNeedsToDodge!.passedCubeAlready) {
+                    
+                    currentPlatformThatPlayerNeedsToDodge!.makePlatformsRubberbandBack()
                     
                 }
                 
@@ -292,6 +457,25 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         for IDOfPlatformToRemove in IDsOfPlatformsToRemove {
             
+            /*
+             
+             NOTE TO SELF:
+             
+             This was causing a bug where the collision between a platform the
+             player still needs to dodge and the player is treated as if it were a
+             collision between a platform the player already dodged and the player
+             
+             I might want to fix this otherwise the game might crash due to integer overflow if the player somehow makes it very far into the game, like to
+             the point where they score more than 2,147,483,648...but then again, this
+             might be extremely unlikely so I might just let it go for the time being
+             
+             */
+            /*if (numberOfPlatformsOnScreenStill > 0) {
+                
+                numberOfPlatformsOnScreenStill-=1
+                
+            }*/
+            
             platformsThatHavePassedPlayerAlready.removeValue(forKey: IDOfPlatformToRemove)
             
         }
@@ -302,11 +486,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         if (!gameIsEnding) {
             
-            if (platformsSpawnedInSoFar!.count > 0) {
+            manageGhostPowerUpActivity()
+            
+            if (/*platformsSpawnedInSoFar!.count > 0*/currentPlatformThatPlayerNeedsToDodge != nil) {
                 
-                if (!platformsSpawnedInSoFar![platformsSpawnedInSoFar!.count - 1].passedCubeAlready) {
+                if (/*!platformsSpawnedInSoFar![platformsSpawnedInSoFar!.count - 1].passedCubeAlready*/!currentPlatformThatPlayerNeedsToDodge!.passedCubeAlready) {
                     
-                    if (platformsSpawnedInSoFar![platformsSpawnedInSoFar!.count - 1].checkForWhenThisPlatformPassesMainCube()) {
+                    if (/*platformsSpawnedInSoFar![platformsSpawnedInSoFar!.count - 1].checkForWhenThisPlatformPassesMainCube()*/currentPlatformThatPlayerNeedsToDodge!.checkForWhenThisPlatformPassesMainCube()) {
                         
                         /*
      
@@ -315,9 +501,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                             is not counted
                          
                         */
-                        platformsThatHavePassedPlayerAlready[platformsSpawnedInSoFar![platformsSpawnedInSoFar!.count - 1].getPlatformID()] = platformsSpawnedInSoFar![platformsSpawnedInSoFar!.count - 1]
+                        //platformsThatHavePassedPlayerAlready[platformsSpawnedInSoFar![platformsSpawnedInSoFar!.count - 1].getPlatformID()] = platformsSpawnedInSoFar![platformsSpawnedInSoFar!.count - 1]
+                        platformsThatHavePassedPlayerAlready[currentPlatformThatPlayerNeedsToDodge!.getPlatformID()] = currentPlatformThatPlayerNeedsToDodge!
                         
                         removeInActivePlatformsFromDodgedPlatformsCollection()
+                        
+                        if (ghostPowerUpActive) {
+                            
+                            currentNumberOfPlatformsPlayerHasPassedWhileGhostPowerUpWasActive+=1
+                            
+                        }
                         
                         //increase player score:
                         currentScore += 1
@@ -371,35 +564,49 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 
             }
             
-            if ((firstBody.categoryBitMask & PhysicsCategories.mainCube) != 0) {
+            if ((firstBody.categoryBitMask & PhysicsCategories.mainCube) == 1) {
                 
                 //the main cube has hit something:
-                if ((secondBody.categoryBitMask & PhysicsCategories.platforms) != 0) {
+                if (secondBody.categoryBitMask == PhysicsCategories.platforms) {
                     
-                    if (platformsThatHavePassedPlayerAlready[(secondBody.node!.name)!] != nil) {
+                    //print("Hit a platform")
+                    if ((platformsThatHavePassedPlayerAlready[(secondBody.node!.name)!] != nil) || ghostPowerUpActive) {
                         
-                        //the cube hit a platform that it already passed
+                        //the cube hit a platform that it already passed, or ghost power up is active
                         return
                         
                     }
                     
                     //the main cube hit a platform and should explode:
-                    print("main cube hit platform and should explode")
+                    //print("main cube hit platform and should explode")
                     gameIsEnding = true
                     
                     //pause all platform movement:
-                    for platform in platformsSpawnedInSoFar! {
+                    /*for platform in platformsSpawnedInSoFar! {
                         
                         platform.pauseOrUnpauseAllPlatformMovement(pause: true)
+                        
+                    } */
+                    if (currentPlatformThatPlayerNeedsToDodge != nil) {
+                        
+                        currentPlatformThatPlayerNeedsToDodge!.pauseOrUnpauseAllPlatformMovement(pause: true)
+                        
+                    }
+                    
+                    for (platformID, _) in platformsThatHavePassedPlayerAlready {
+                        
+                        platformsThatHavePassedPlayerAlready[platformID]?.pauseOrUnpauseAllPlatformMovement(pause: true)
                         
                     }
                     
                     mainCube?.doDeath()
                     
                 }
-                else if ((secondBody.categoryBitMask & PhysicsCategories.powerUps) != 0) {
+                else if (secondBody.categoryBitMask == PhysicsCategories.powerUps) {
                     
-                    print("Main cube hit a power up!")
+                    //platformsSpawnedInSoFar![platformsSpawnedInSoFar!.count - 1].spawnedPowerUp!.doPowerUpFunctionality(gameManager: self)
+                
+                    currentPlatformThatPlayerNeedsToDodge!.spawnedPowerUp!.doPowerUpFunctionality(gameManager: self)
                     
                 }
             
