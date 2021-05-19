@@ -31,7 +31,8 @@ class PlatformManager {
     
     public var spawnedPowerUp: PowerUpBaseManager?
     public var ghostModeActive: Bool = false
-            
+    private let ghostAlphaValue: CGFloat = 0.15
+    
     private func setUpPhysicsOnPlatform(colliderSize: CGSize) -> SKPhysicsBody {
         
         let boxCollider = SKPhysicsBody(rectangleOf: CGSize(width: colliderSize.width / colliderSizeDownScaleFactor, height: colliderSize.height / colliderSizeDownScaleFactor))
@@ -44,16 +45,46 @@ class PlatformManager {
         
     }
     
-    public func toggleGhostMode(on: Bool) {
+    /*
+     
+     Use this method to change the color of a platform that
+     the player still needs to dodge whenever the difficulty
+     changes
+     
+     */
+    public func updateColorOfPlatform() {
         
-        if (on) {
+        if (ghostModeActive) {
             
-            platformColor = CGColor(red: 1, green: 0, blue: 0, alpha: 0.5)
+            platformColor = CGColor(red: DifficultyColors.getCurrentRValue(), green: DifficultyColors.getCurrentGValue(), blue: DifficultyColors.getCurrentBValue(), alpha: ghostAlphaValue)
             
         }
         else {
             
-            platformColor = CGColor(red: 1, green: 0, blue: 0, alpha: 1)
+            //platformColor = CGColor(red: 1, green: 0, blue: 0, alpha: 1)
+            platformColor = CGColor(red: DifficultyColors.getCurrentRValue(), green: DifficultyColors.getCurrentGValue(), blue: DifficultyColors.getCurrentBValue(), alpha: 1)
+            
+        }
+        
+        for platform in currentPlatformGroup {
+            
+            platform.color = UIColor(cgColor: platformColor)
+            
+        }
+        
+    }
+    
+    public func toggleGhostMode(on: Bool) {
+        
+        if (on) {
+            
+            platformColor = CGColor(red: DifficultyColors.getCurrentRValue(), green: DifficultyColors.getCurrentGValue(), blue: DifficultyColors.getCurrentBValue(), alpha: ghostAlphaValue)
+            
+        }
+        else {
+            
+            //platformColor = CGColor(red: 1, green: 0, blue: 0, alpha: 1)
+            platformColor = CGColor(red: DifficultyColors.getCurrentRValue(), green: DifficultyColors.getCurrentGValue(), blue: DifficultyColors.getCurrentBValue(), alpha: 1)
             
         }
         
@@ -69,8 +100,6 @@ class PlatformManager {
     
     init(scene: SKScene, platformMovementTime: CGFloat, platformSlitSpacing: CGFloat, xCordAtWhichCubeIsPassed: CGFloat, platformID: String, canAttemptToSpawnPowerUp: Bool) {
         
-        platformColor = DifficultyScales.difficultyColors[DifficultyScales.currentDifficulty][1]
-        
         self.platformID = platformID
         
         self.platformMovementTime = platformMovementTime
@@ -84,18 +113,15 @@ class PlatformManager {
         topPlatform.scale(to: CGSize(width: topPlatform.size.width, height: scene.frame.size.height))
         topPlatform.position = CGPoint(x: scene.frame.size.width * 1.5, y: scene.frame.size.height + (platformSlitSpacing / 2))
         topPlatform.colorBlendFactor = 1
-        topPlatform.color = UIColor(cgColor: platformColor)
+        topPlatform.color = UIColor(cgColor: DifficultyColors.getPlatformColor())
         topPlatform.name = platformID
         topPlatform.physicsBody = setUpPhysicsOnPlatform(colliderSize: topPlatform.size)
-        
-        // spawn in a power up:
-        //let ghostPowerUp = PowerUpBaseManager(parentNode: topPlatform, upperBound: (-(topPlatform.size.height / heightRescaleFactor) / 2), lowerBound: (-platformSlitSpacing / 2) / heightRescaleFactor , powerUpName: "ghostPowerUp", heightRescaleFactor: heightRescaleFactor)
         
         let bottomPlatform = SKSpriteNode(imageNamed: "platform")
         bottomPlatform.scale(to: CGSize(width: topPlatform.size.width, height: scene.frame.size.height))
         bottomPlatform.position = CGPoint(x: scene.frame.size.width * 1.5, y: 0 - (platformSlitSpacing / 2))
         bottomPlatform.colorBlendFactor = 1
-        bottomPlatform.color = UIColor(cgColor: platformColor)
+        bottomPlatform.color = UIColor(cgColor: DifficultyColors.getPlatformColor())
         bottomPlatform.name = platformID
         bottomPlatform.physicsBody = setUpPhysicsOnPlatform(colliderSize: bottomPlatform.size)
         

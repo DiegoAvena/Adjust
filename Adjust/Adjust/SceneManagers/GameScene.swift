@@ -31,6 +31,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     private var gameIsPaused = false
     
+    private var needToShowGameControlsToPlayer = true
+    
     //prevents spamming of buttons
     private var doingAButtonFunctionAlready: Bool = false
     
@@ -52,6 +54,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     let numberOfPlatformsPlayerCanSkipWhileGhostPowerUpIsActive = 4
     var currentNumberOfPlatformsPlayerHasPassedWhileGhostPowerUpWasActive = 0
     
+    //help screen UI:
+    var swipeUpArrow: SKSpriteNode!
+    var swipeDownArrow: SKSpriteNode!
+    var swipeLabels: [SKLabelNode]!
+    var howToStartGameLabel: SKLabelNode!
+    
     override func didMove(to view: SKView) {
         
         resetDifficulty()
@@ -61,8 +69,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         physicsWorld.gravity = .zero
         physicsWorld.contactDelegate = self
         
-        backgroundColor = SKColor(cgColor: DifficultyScales.difficultyColors[DifficultyScales.currentDifficulty][0])
-        //backgroundColor = SKColor(cgColor: )
+        backgroundColor = SKColor(cgColor: DifficultyColors.getBackgroundColor())
         
         //load the main cube in:
         mainCube = MainCubeManager(scene: self)
@@ -72,7 +79,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         scoreLabel.horizontalAlignmentMode = SKLabelHorizontalAlignmentMode.left
         
         scoreLabel.color = UIColor(cgColor: textColor)
-        scoreLabel.position = CGPoint(x: self.frame.size.width / 20.5, y: self.frame.size.height - (self.frame.size.height / 11))
+        scoreLabel.position = CGPoint(x: self.frame.size.width / 20.5, y: self.frame.size.height - (self.frame.size.height / 9.25))
         scoreLabel.text = "Score: \(currentScore)"
         scoreLabel.zPosition = 10
         self.addChild(scoreLabel)
@@ -95,8 +102,26 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         self.tryToSpawnSomePlatforms()
         
+        /*
+         
+         give a grey background to the UI on top
+         so its easier to distinguish
+         
+         */
+        let UIBackground = SKSpriteNode(imageNamed: "platform")
+        UIBackground.scale(to: CGSize(width: UIBackground.size.width * 50, height: UIBackground.size.height * 20))
+        
+        UIBackground.colorBlendFactor = 1
+        UIBackground.color = UIColor(red: 0.25, green: 0.25, blue: 0.25, alpha: 0.15)
+        UIBackground.position = CGPoint(x: self.frame.size.width / 2, y: self.frame.size.height + (self.frame.size.height * 5.145))
+        UIBackground.zPosition = 9
+        self.addChild(UIBackground)
+        
         //will gradually increment the difficulty
         self.run(SKAction.repeatForever(SKAction.sequence(formDifficultyIncreaseAction())), withKey: difficultyIncreaseActionTag)
+        
+        //pause the screen and show the controls to the player:
+        pauseGame()
         
     }
     
@@ -111,9 +136,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 //not yet at max speed:
                 DifficultyScales.currentDifficulty+=1
                 self.platformMovementTime = DifficultyScales.platformMovementTimes[DifficultyScales.currentDifficulty]
-                print("INCREASE DIFFICULTY TO: \(DifficultyScales.currentDifficulty)")
                 
-                self.backgroundColor = SKColor(cgColor: DifficultyScales.difficultyColors[DifficultyScales.currentDifficulty][0])
+                self.backgroundColor = SKColor(cgColor: DifficultyColors.getBackgroundColor())
+                
+                if (self.currentPlatformThatPlayerNeedsToDodge != nil) {
+                    
+                    self.currentPlatformThatPlayerNeedsToDodge?.updateColorOfPlatform()
+                    
+                }
                 
             }
             
@@ -125,9 +155,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     public func resetDifficulty() {
         
-        print("RESET DIFFICULTY")
         DifficultyScales.currentDifficulty = 0
         platformMovementTime = DifficultyScales.platformMovementTimes[0]
+        
+        self.backgroundColor = UIColor(cgColor: DifficultyColors.getBackgroundColor())
+        
+        if (currentPlatformThatPlayerNeedsToDodge != nil) {
+            
+            currentPlatformThatPlayerNeedsToDodge?.updateColorOfPlatform()
+            
+        }
         
         if self.action(forKey: difficultyIncreaseActionTag) != nil {
             
@@ -202,31 +239,134 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             
         }
         
-        pauseScreenLabel = SKLabelNode(fontNamed: "Our-Arcade-Games")
-        pauseScreenLabel?.fontSize = 40
-        pauseScreenLabel?.color = UIColor(cgColor: textColor)
-        pauseScreenLabel?.text = "PAUSED"
-        pauseScreenLabel?.position = CGPoint(x: self.frame.size.width / 2, y: self.frame.size.height / 1.45)
-        pauseScreenLabel?.zPosition = 20
-        self.addChild(pauseScreenLabel!)
-        
-        pauseScreenResumeButton = SKSpriteNode(imageNamed: "resumeBtn")
-        pauseScreenResumeButton?.name = "resumeGameButton"
-        pauseScreenResumeButton?.position = CGPoint(x: self.frame.size.width / 2, y: (self.frame.size.height / 2) - 60)
-        pauseScreenResumeButton?.zPosition = 20
-        pauseScreenResumeButton?.scale(to: CGSize(width: (pauseScreenResumeButton?.size.width)! * 0.8, height: (pauseScreenResumeButton?.size.height)! * 0.8))
-        self.addChild(pauseScreenResumeButton!)
-        
-        pauseScreenBG = SKSpriteNode(imageNamed: "platform")
-        pauseScreenBG?.scale(to: CGSize(width: (pauseScreenBG?.size.width)! * 50, height: (pauseScreenBG?.size.height)! * 20))
-        pauseScreenBG?.colorBlendFactor = 1
-        pauseScreenBG?.color = UIColor(cgColor: CGColor(red: 0, green: 0, blue: 0, alpha: 0.5))
-        pauseScreenBG?.position = CGPoint(x: self.frame.size.width / 2, y: self.frame.size.height / 2)
-        pauseScreenBG?.zPosition = 19
-        self.addChild(pauseScreenBG!)
-        
-        doingAButtonFunctionAlready = false
+        if (needToShowGameControlsToPlayer) {
+                        
+            //the game was paused because the controls are being displayed:
+            pauseScreenLabel = SKLabelNode(fontNamed: "Our-Arcade-Games")
+            pauseScreenLabel?.fontSize = 30
+            pauseScreenLabel?.color = UIColor(cgColor: textColor)
+            pauseScreenLabel?.text = "HOW TO PLAY"
+            pauseScreenLabel?.position = CGPoint(x: self.frame.size.width / 2, y: self.frame.size.height / 1.1)
+            pauseScreenLabel?.zPosition = 20
+            self.addChild(pauseScreenLabel!)
+            
+            //the swipe up arrow:
+            let downscaleFactor: CGFloat = 1.35
+            let verticalSpacing: CGFloat = 180
+            let xOffset: CGFloat = 90
+            swipeUpArrow = SKSpriteNode(imageNamed: "helperArrow")
+            swipeUpArrow.scale(to: CGSize(width: swipeUpArrow.size.width / downscaleFactor, height: swipeUpArrow.size.height / downscaleFactor))
+            swipeUpArrow.position = CGPoint(x: (self.frame.size.width / 2) - xOffset, y: (self.frame.size.height / 2) + (verticalSpacing / 2))
+            swipeUpArrow.zPosition = 20
+            
+            swipeDownArrow = SKSpriteNode(imageNamed: "helperArrow")
+            swipeDownArrow.position = CGPoint(x: (self.frame.size.width / 2) - xOffset, y: (self.frame.size.height / 2) - (verticalSpacing / 2))
+            swipeDownArrow.scale(to: CGSize(width: swipeDownArrow.size.width / downscaleFactor, height: swipeDownArrow.size.height / downscaleFactor))
+            swipeDownArrow.yScale *= -1
+            swipeDownArrow.zPosition = 20
+            
+            self.addChild(swipeUpArrow)
+            self.addChild(swipeDownArrow)
+            
+            swipeLabels = []
+            let labelYOffset: CGFloat = 25
+            let labelXOffset: CGFloat = 45
+            let fontSizeOfHelperLabels: CGFloat = 14
+            var currentYCordOfSwipeLabels = swipeUpArrow.position.y + labelYOffset
+            var messages = ["Swipe up", "to slide", "vertical platform up"]
+            for i in 0..<3 {
+            
+                let swipeUpLabel = SKLabelNode(fontNamed: "Our-Arcade-Games")
+                swipeUpLabel.fontSize = fontSizeOfHelperLabels
+                swipeUpLabel.text = messages[i]
+                swipeUpLabel.position = CGPoint(x: (self.frame.size.width / 2) + labelXOffset, y: currentYCordOfSwipeLabels)
+                swipeUpLabel.zPosition = 20
+                
+                currentYCordOfSwipeLabels -= labelYOffset
+                self.addChild(swipeUpLabel)
+                swipeLabels.append(swipeUpLabel)
 
+            }
+            
+            messages[0] = "Swipe down"
+            messages[2] = "vertical platform down"
+            currentYCordOfSwipeLabels = swipeDownArrow.position.y + labelYOffset
+            for i in 0..<3 {
+                
+                let swipeDownLabel = SKLabelNode(fontNamed: "Our-Arcade-Games")
+                swipeDownLabel.fontSize = fontSizeOfHelperLabels
+                swipeDownLabel.text = messages[i]
+                swipeDownLabel.position = CGPoint(x: (self.frame.size.width / 2) + labelXOffset, y: currentYCordOfSwipeLabels)
+                swipeDownLabel.zPosition = 20
+                
+                currentYCordOfSwipeLabels -= labelYOffset
+                self.addChild(swipeDownLabel)
+                swipeLabels.append(swipeDownLabel)
+                
+            }
+            
+            
+            self.howToStartGameLabel = SKLabelNode(fontNamed: "Our-Arcade-Games")
+            self.howToStartGameLabel.fontSize = 30
+            self.howToStartGameLabel.text = "TAP TO BEGIN"
+            self.howToStartGameLabel.position = CGPoint(x: self.frame.size.width / 2, y: 0 + self.frame.size.height / 13.5)
+            self.howToStartGameLabel.zPosition = 20
+            
+            var blinkAction: [SKAction] = []
+            blinkAction.append(SKAction.wait(forDuration: 0.85))
+            blinkAction.append(SKAction.run {
+                
+                self.howToStartGameLabel.text = ""
+                
+            })
+            blinkAction.append(SKAction.wait(forDuration: 0.85))
+            blinkAction.append(SKAction.run {
+                
+                self.howToStartGameLabel.text = "TAP TO BEGIN"
+
+            })
+
+            howToStartGameLabel.run(SKAction.repeatForever(SKAction.sequence(blinkAction)))
+            
+            self.addChild(self.howToStartGameLabel)
+            
+            pauseScreenBG = SKSpriteNode(imageNamed: "platform")
+            pauseScreenBG?.scale(to: CGSize(width: (pauseScreenBG?.size.width)! * 50, height: (pauseScreenBG?.size.height)! * 20))
+            pauseScreenBG?.colorBlendFactor = 1
+            pauseScreenBG?.color = UIColor(cgColor: CGColor(red: 0, green: 0, blue: 0, alpha: 0.8))
+            pauseScreenBG?.position = CGPoint(x: self.frame.size.width / 2, y: self.frame.size.height / 2)
+            pauseScreenBG?.zPosition = 19
+            self.addChild(pauseScreenBG!)
+            
+        }
+        else {
+            
+            pauseScreenLabel = SKLabelNode(fontNamed: "Our-Arcade-Games")
+            pauseScreenLabel?.fontSize = 40
+            pauseScreenLabel?.color = UIColor(cgColor: textColor)
+            pauseScreenLabel?.text = "PAUSED"
+            pauseScreenLabel?.position = CGPoint(x: self.frame.size.width / 2, y: self.frame.size.height / 1.45)
+            pauseScreenLabel?.zPosition = 20
+            self.addChild(pauseScreenLabel!)
+            
+            pauseScreenResumeButton = SKSpriteNode(imageNamed: "resumeBtn")
+            pauseScreenResumeButton?.name = "resumeGameButton"
+            pauseScreenResumeButton?.position = CGPoint(x: self.frame.size.width / 2, y: (self.frame.size.height / 2) - 60)
+            pauseScreenResumeButton?.zPosition = 20
+            pauseScreenResumeButton?.scale(to: CGSize(width: (pauseScreenResumeButton?.size.width)! * 0.8, height: (pauseScreenResumeButton?.size.height)! * 0.8))
+            self.addChild(pauseScreenResumeButton!)
+            
+            pauseScreenBG = SKSpriteNode(imageNamed: "platform")
+            pauseScreenBG?.scale(to: CGSize(width: (pauseScreenBG?.size.width)! * 50, height: (pauseScreenBG?.size.height)! * 20))
+            pauseScreenBG?.colorBlendFactor = 1
+            pauseScreenBG?.color = UIColor(cgColor: CGColor(red: 0, green: 0, blue: 0, alpha: 0.5))
+            pauseScreenBG?.position = CGPoint(x: self.frame.size.width / 2, y: self.frame.size.height / 2)
+            pauseScreenBG?.zPosition = 19
+            self.addChild(pauseScreenBG!)
+            doingAButtonFunctionAlready = false
+
+        }
+        
     }
     
     private func resumeGame() {
@@ -258,14 +398,24 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             
         }
         
-        /*
-        for platform in platformsSpawnedInSoFar! {
-            
-            platform.pauseOrUnpauseAllPlatformMovement(pause: false)
-            
-        } */
-        
         doingAButtonFunctionAlready = false
+        
+        if (needToShowGameControlsToPlayer) {
+            
+            //game was resumed out of the game controls screen:
+            for helpLabel in swipeLabels {
+                
+                helpLabel.removeFromParent()
+                
+            }
+            
+            swipeUpArrow.removeFromParent()
+            swipeDownArrow.removeFromParent()
+            howToStartGameLabel.removeFromParent()
+            
+            needToShowGameControlsToPlayer = false
+            
+        }
         
     }
     
@@ -273,6 +423,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         if (doingAButtonFunctionAlready || gameIsEnding) {
             
+            return
+            
+        }
+        
+        if (needToShowGameControlsToPlayer) {
+            
+            //was showing the game controls to the player:
+            resumeGame()
             return
             
         }
@@ -387,15 +545,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         if (!gameIsEnding) {
             
-            /*if (platformsSpawnedInSoFar!.count > 0) {
-                
-                if (!platformsSpawnedInSoFar![platformsSpawnedInSoFar!.count - 1].passedCubeAlready) {
-                    
-                    platformsSpawnedInSoFar![platformsSpawnedInSoFar!.count - 1].makePlatformsRubberbandBack()
-                    
-                }
-                
-            } */
             if (currentPlatformThatPlayerNeedsToDodge != nil) {
                 
                 if (!currentPlatformThatPlayerNeedsToDodge!.passedCubeAlready) {
@@ -438,12 +587,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
              might be extremely unlikely so I might just let it go for the time being
              
              */
-            /*if (numberOfPlatformsOnScreenStill > 0) {
-                
-                numberOfPlatformsOnScreenStill-=1
-                
-            }*/
-            
             platformsThatHavePassedPlayerAlready.removeValue(forKey: IDOfPlatformToRemove)
             
         }
@@ -536,11 +679,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 //the main cube has hit something:
                 if (secondBody.categoryBitMask == PhysicsCategories.platforms) {
                     
-                    //for debugging, remove once done
-                    //return
-                    
-                    //print("Hit a platform")
-                    if ((platformsThatHavePassedPlayerAlready[(secondBody.node!.name)!] != nil) || /*ghostPowerUpActive ||*/ currentPlatformThatPlayerNeedsToDodge!.ghostModeActive) {
+                    if ((platformsThatHavePassedPlayerAlready[(secondBody.node!.name)!] != nil) || currentPlatformThatPlayerNeedsToDodge!.ghostModeActive) {
                         
                         //the cube hit a platform that it already passed, or ghost power up is active
                         return
@@ -548,15 +687,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                     }
                     
                     //the main cube hit a platform and should explode:
-                    //print("main cube hit platform and should explode")
                     gameIsEnding = true
                     
-                    //pause all platform movement:
-                    /*for platform in platformsSpawnedInSoFar! {
-                        
-                        platform.pauseOrUnpauseAllPlatformMovement(pause: true)
-                        
-                    } */
                     if (currentPlatformThatPlayerNeedsToDodge != nil) {
                         
                         currentPlatformThatPlayerNeedsToDodge!.pauseOrUnpauseAllPlatformMovement(pause: true)
@@ -574,10 +706,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 }
                 else if (secondBody.categoryBitMask == PhysicsCategories.powerUps) {
                     
-                    //platformsSpawnedInSoFar![platformsSpawnedInSoFar!.count - 1].spawnedPowerUp!.doPowerUpFunctionality(gameManager: self)
+                    if (!ghostPowerUpActive) {
+                        
+                        currentPlatformThatPlayerNeedsToDodge!.toggleGhostMode(on: true)
+                        currentPlatformThatPlayerNeedsToDodge!.spawnedPowerUp!.doPowerUpFunctionality(gameManager: self)
+                        
+                    }
                     
-                    currentPlatformThatPlayerNeedsToDodge!.toggleGhostMode(on: true)
-                    currentPlatformThatPlayerNeedsToDodge!.spawnedPowerUp!.doPowerUpFunctionality(gameManager: self)
                     
                 }
             
