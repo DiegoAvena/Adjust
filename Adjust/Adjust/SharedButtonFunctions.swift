@@ -7,8 +7,15 @@
 
 import SpriteKit
 
+/*
+ 
+ Contains behaviors that are
+ shared by all the buttons
+ 
+ */
 class SharedFunctions {
     
+    //an effect that makes a button scale up and down upon being clicked
     public static func createButtonClickEffect(startingScales: CGSize) -> [SKAction] {
         
         let scaleFactor: CGFloat = 1.15

@@ -7,6 +7,14 @@
 
 import SpriteKit
 
+/*
+ 
+ Contains each color setting used
+ to signal the different difficulties to
+ the player as they progress through
+ the game
+ 
+ */
 struct DifficultyColors {
     
     /*

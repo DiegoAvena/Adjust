@@ -6,6 +6,13 @@
 //
 import Foundation
 
+/*
+ 
+ Contains all of the functionality
+ needed for saving and getting access
+ to scores
+ 
+ */
 struct Scores {
     
     static var recentScore = 0

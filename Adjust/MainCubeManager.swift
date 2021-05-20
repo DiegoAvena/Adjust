@@ -7,16 +7,27 @@
 
 import SpriteKit
 
+/*
+ 
+ Contains all of the behavior the
+ red cube needs, such as its
+ up and down movement, its death behavior, etc.
+ 
+ */
 class MainCubeManager {
     
+    //the lower this is, the faster the cube will move
     private var cubeSpeed: CGFloat = 2.25
     
+    //the speed of the explosion animation
     let fps = 0.065
     
     public var isDead = false
     
+    //used to pause or resume the cube movement action
     private let cubeActionTag = "cubeMovement"
-
+    
+    //for the explosio animation
     private var explosionAtlas: SKTextureAtlas
     private var explosionFrames: [SKTexture]
     
@@ -112,6 +123,7 @@ class MainCubeManager {
         
     }
     
+    //this is the move up and down action the cube constantly does on the game scene
     private func formUpAndDownAction(scene: SKScene, startingXCord: CGFloat, cubeHeight: CGFloat) -> [SKAction] {
         
         var moveUpAndDownAction = [SKAction]()

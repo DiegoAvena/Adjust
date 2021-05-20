@@ -9,7 +9,9 @@ import SpriteKit
 
 struct DifficultyScales {
     
+    //the different platform movement speeds per difficulty
     static let platformMovementTimes: [CGFloat] = [3, 2.5, 2, 1.5, 1.3]
+    
     static var currentDifficulty = 0
     
     /*

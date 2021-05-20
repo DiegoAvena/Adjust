@@ -7,16 +7,23 @@
 
 import SpriteKit
 
+/*
+ 
+Both the main menu scene and
+game over scene shared similar layouts and
+ functionalities, so those
+ were placed in this script and
+ both the Gameover scene and GameScene
+ scripts inherit from here
+ 
+ */
 class BaseMenuSceneManager: SKScene {
 
     private var newGameButton: SKSpriteNode?
     
     var doingButtonFunction = false
     
-    //TODO:
-    private var currentHighScore: Int?
-    private var lastScore: Int?
-    
+    //background color changes
     var increment = true
     var currentColorVal: CGFloat = 0.45
     var canChangeColor = false
@@ -83,6 +90,7 @@ class BaseMenuSceneManager: SKScene {
         
     }
     
+    //this is used to achieve the background color change on both menus
     @objc private func changeBGColor() {
         
         if (!self.increment) {
@@ -109,6 +117,7 @@ class BaseMenuSceneManager: SKScene {
         
     }
     
+    //an action that moves the node up and then down
     private func createBobbleUpAction(startingCord: CGPoint) -> [SKAction] {
         
         var bobbleAction = [SKAction]()

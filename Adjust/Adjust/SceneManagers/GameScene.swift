@@ -7,6 +7,16 @@
 
 import SpriteKit
 
+/*
+ 
+ Manages the game scene,
+ such as incrementing the player
+ score when the current platform
+ group is dodged, or pausing and resuming the game,
+ or ending the game due to player deaths,
+ etc.
+ 
+ */
 class GameScene: SKScene, SKPhysicsContactDelegate {
     
     private var currentScore: Int = 0
@@ -25,12 +35,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private var pauseScreenResumeButton: SKSpriteNode?
     private var pauseScreenBG: SKSpriteNode?
     
+    //the red cube the player must protect
     private var mainCube: MainCubeManager?
-    
-    var currentColorVal: CGFloat = 0.45
-    
+        
     private var gameIsPaused = false
     
+    //used to pause the game on startup so the player can read the controls
     private var needToShowGameControlsToPlayer = true
     
     //prevents spamming of buttons
@@ -47,6 +57,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     var additionalSlitSpacing: CGFloat = 15
     
+    /*
+     
+     Keeps track of all the platforms the
+     player has passed so that they can be paused
+     when the player pauses the game or resumed, and
+     so that the game can distinguish between
+     platforms the player has dodged and which ones
+     the player still needs to dodge
+     
+     */
     var platformsThatHavePassedPlayerAlready: [String: PlatformManager]!
     
     //ghost power up
@@ -62,6 +82,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     override func didMove(to view: SKView) {
         
+        /*
+         
+         Difficulty must always be refreshed because
+         this is preserved between scenes, so if
+         the player makes it to difficulty 4
+         and returns to this scene from the game over scene
+         without this getting called, the game starts
+         at difficulty 4
+         
+         */
         resetDifficulty()
         
         platformsThatHavePassedPlayerAlready = [:]
@@ -74,6 +104,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         //load the main cube in:
         mainCube = MainCubeManager(scene: self)
         
+        //set up UI
         scoreLabel = SKLabelNode(fontNamed: "Our-Arcade-Games")
         scoreLabel.fontSize = 20
         scoreLabel.horizontalAlignmentMode = SKLabelHorizontalAlignmentMode.left
@@ -100,6 +131,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         self.platformMovementTime = DifficultyScales.platformMovementTimes[DifficultyScales.currentDifficulty]
         
+        //spawn the first set of platforms
         self.tryToSpawnSomePlatforms()
         
         /*
@@ -125,6 +157,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
     }
     
+    //the action that will gradually increase the difficulty
     private func formDifficultyIncreaseAction() -> [SKAction] {
         
         var difficultyIncreaseAction: [SKAction] = []
@@ -341,6 +374,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
         else {
             
+            //the game was paused during an actual match
             pauseScreenLabel = SKLabelNode(fontNamed: "Our-Arcade-Games")
             pauseScreenLabel?.fontSize = 40
             pauseScreenLabel?.color = UIColor(cgColor: textColor)
@@ -423,13 +457,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         if (doingAButtonFunctionAlready || gameIsEnding) {
             
+            //do not process this touch since a buttons functionality is already occuring
             return
             
         }
         
         if (needToShowGameControlsToPlayer) {
             
-            //was showing the game controls to the player:
+            //was showing the game controls to the player, resume game:
             resumeGame()
             return
             
@@ -437,6 +472,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         let touch = touches.first
         
+        //handle button tapping
         if let touchLocation = touch?.location(in: self) {
             
             let nodesArray = self.nodes(at: touchLocation)
@@ -445,9 +481,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 
                 if nodesArray.first?.name == "pauseGameButton" {
                     
+                    //pause game:
                     doingAButtonFunctionAlready = true
                     self.run(SKAction.playSoundFileNamed("buttonClick.wav", waitForCompletion: false))
-                    //transition to the game scene:
                     nodesArray.first?.run(SKAction.sequence(SharedFunctions.createButtonClickEffect(startingScales: pauseGameButton!.size)), completion: {
                         
                         self.pauseGame()
@@ -457,6 +493,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 }
                 else if nodesArray.first?.name == "quitGameButton" {
                     
+                    //quit game:
                     doingAButtonFunctionAlready = true
                     self.run(SKAction.playSoundFileNamed("buttonClick.wav", waitForCompletion: false))
                     
@@ -480,6 +517,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 
                 if nodesArray.first?.name == "resumeGameButton" {
                     
+                    //resume game:
+                    
                     doingAButtonFunctionAlready = true
                     self.run(SKAction.playSoundFileNamed("buttonClick.wav", waitForCompletion: false))
                     
@@ -499,11 +538,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
     }
     
+    /*
+     
+     Spawns a platform whenever there is no
+     platform group the player has to dodge or
+     if the player just recently dodged a platform group
+     
+     */
     private func tryToSpawnSomePlatforms() {
         
         if ((currentPlatformThatPlayerNeedsToDodge == nil) || currentPlatformThatPlayerNeedsToDodge!.passedCubeAlready) {
                         
-            currentPlatformThatPlayerNeedsToDodge = PlatformManager(scene: self, platformMovementTime: platformMovementTime, platformSlitSpacing: (mainCube!.getMainCubeSize().height * 2) + additionalSlitSpacing, xCordAtWhichCubeIsPassed: mainCube!.getMainCubePosition().x + (mainCube!.getMainCubeSize().width / 3.5), platformID: "Platform\(/*platformsSpawnedInSoFar!.count*/numberOfPlatformsOnScreenStill)", canAttemptToSpawnPowerUp: !ghostPowerUpActive)
+            currentPlatformThatPlayerNeedsToDodge = PlatformManager(scene: self, platformMovementTime: platformMovementTime, platformSlitSpacing: (mainCube!.getMainCubeSize().height * 2) + additionalSlitSpacing, xCordAtWhichCubeIsPassed: mainCube!.getMainCubePosition().x + (mainCube!.getMainCubeSize().width / 3.5), platformID: "Platform\(numberOfPlatformsOnScreenStill)", canAttemptToSpawnPowerUp: !ghostPowerUpActive)
             
             numberOfPlatformsOnScreenStill+=1
             
@@ -519,7 +565,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
      */
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
         
-        if (!gameIsEnding) {
+        if (!gameIsEnding && !gameIsPaused) {
             
             let touch = touches.first
             
@@ -541,6 +587,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
     }
     
+    /*
+     
+     Used to launch the rubberband
+     action
+     
+     */
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         
         if (!gameIsEnding) {
@@ -593,6 +645,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
     }
     
+    /*
+     
+     Used to check when player score should increase
+     and for when a new platform should spawn, and
+     also for when the game over scene can load if the game
+     is ending
+     
+     */
     override func update(_ currentTime: TimeInterval) {
                 
         if (!gameIsEnding) {
@@ -639,7 +699,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         else if (mainCube!.isDead && !loadingGameOverSceneAlready) {
             
             //start transitioning to game over scene:
-            print("load game over scene")
             let transition = SKTransition.flipVertical(withDuration: 0.5)
             if let gameOverScene = GameOverSceneManager(fileNamed: "GameOverScene") {
                 
@@ -653,8 +712,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
     }
     
+    //collision detections
     func didBegin(_ contact: SKPhysicsContact) {
-        
         
         if (!gameIsEnding) {
             
@@ -706,6 +765,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 }
                 else if (secondBody.categoryBitMask == PhysicsCategories.powerUps) {
                     
+                    //powerup was hit:
                     if (!ghostPowerUpActive) {
                         
                         currentPlatformThatPlayerNeedsToDodge!.toggleGhostMode(on: true)

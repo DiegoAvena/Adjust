@@ -7,6 +7,11 @@
 
 import SpriteKit
 
+/*
+ 
+ Manages the main menu scene
+ 
+ */
 class MainMenuSceneManager: BaseMenuSceneManager {
     
     override func didMove(to view: SKView) {

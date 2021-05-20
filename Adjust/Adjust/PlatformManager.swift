@@ -7,14 +7,28 @@
 
 import SpriteKit
 
+/*
+ 
+ Contains all of the behavior
+ a vertical platform group needs, such
+ as the ability to be dragged down, the ability
+ to rubberband back up, the ability to move from
+ right to left, etc.
+ 
+ */
 class PlatformManager {
     
+    //used to ID this platform group by the gamescene script
     private var platformID: String
     
+    //this collection stores the top and bottom platform for this group
     private var currentPlatformGroup: [SKSpriteNode]!
+    
+    //needed for rubberbanding
     private var initialYPositionsOfCurrentPlatformGroup: [CGFloat]!
     private let rubberBandSpeed: CGFloat = 0.085
     
+    //the higher this is, the slower the platform will move
     private var platformMovementTime: CGFloat
     
     private let platformRubberBandActionName = "platformRubberBand"
@@ -74,6 +88,7 @@ class PlatformManager {
         
     }
     
+    //used by the ghost power up
     public func toggleGhostMode(on: Bool) {
         
         if (on) {
@@ -83,7 +98,6 @@ class PlatformManager {
         }
         else {
             
-            //platformColor = CGColor(red: 1, green: 0, blue: 0, alpha: 1)
             platformColor = CGColor(red: DifficultyColors.getCurrentRValue(), green: DifficultyColors.getCurrentGValue(), blue: DifficultyColors.getCurrentBValue(), alpha: 1)
             
         }
@@ -98,6 +112,16 @@ class PlatformManager {
         
     }
     
+    /*
+     
+     Spawns in the 2 vertical platforms and
+     launches their movement action
+     
+     also decides if a power up should spawn
+     on this platform and spawns one in if that is
+     the case
+     
+     */
     init(scene: SKScene, platformMovementTime: CGFloat, platformSlitSpacing: CGFloat, xCordAtWhichCubeIsPassed: CGFloat, platformID: String, canAttemptToSpawnPowerUp: Bool) {
         
         self.platformID = platformID
@@ -205,6 +229,16 @@ class PlatformManager {
         
     }
     
+    /*
+     
+     This prevents the player from scrolling a platform
+     beyond the top or bottom edge of the screen (so
+     the top edge of the top platform will not go lower than
+     the top edge of the screen, and the bottom edge of
+     the bottom plartform will not go higher than the
+     bottom edge of the screeen)
+     
+     */
     private func makeSurePlatformsDoNotGetScrolledTooFar(yTranslation: CGFloat, scene: SKScene) -> [CGFloat]{
         
         var finalYCords = [currentPlatformGroup[0].position.y + yTranslation,
@@ -230,6 +264,7 @@ class PlatformManager {
         
     }
     
+    //scrolls the platforms to the desired position
     public func ManagePlatformScrolling(yTranslation: CGFloat, scene: SKScene) {
         
         let finalYCords: [CGFloat] = self.makeSurePlatformsDoNotGetScrolledTooFar(yTranslation: yTranslation, scene: scene)
@@ -238,6 +273,7 @@ class PlatformManager {
         
     }
     
+    //handles the rubberband movement via SK actions
     public func makePlatformsRubberbandBack() {
         
         currentPlatformGroup[0].run(SKAction.moveTo(y: initialYPositionsOfCurrentPlatformGroup[0], duration: TimeInterval(rubberBandSpeed)), withKey: platformRubberBandActionName)
@@ -246,6 +282,7 @@ class PlatformManager {
         
     }
     
+    //when this occurs, the players score should increase by 1
     public func checkForWhenThisPlatformPassesMainCube() -> Bool{
         
         if (currentPlatformGroup[0].position.x < xCordAtWhichCubeIsPassed) {
@@ -268,6 +305,16 @@ class PlatformManager {
         
     }
     
+    /*
+     
+     pauses all sk actions attached to this platform,
+     or resumes them. This is why
+     each SK action created and attached to the platforms
+     was also given a tag, so they can
+     be identified and paused or resumed from here
+
+     
+     */
     public func pauseOrUnpauseAllPlatformMovement(pause: Bool) {
         
         if (spawnedPowerUp != nil) {
