@@ -1,4 +1,9 @@
 # Adjust
+
+![AdjustScreenShot](https://user-images.githubusercontent.com/43594702/119887553-1ee65100-bee9-11eb-934a-dab55ab03e2b.PNG)
+
+[See it in action!](https://www.youtube.com/watch?v=zbm5-Jw74B0)
+
 An ios game made inside of xcode using spritekit. The goal of the game is for 
 the player to swipe vertical platform groups up or down in order to adjust the gap 
 between the platforms so that a red cube, which moves up and down, can pass safely. 
